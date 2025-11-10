@@ -1,0 +1,5 @@
+{
+  "name": "Detect CC and trigger subagent",
+  "nodes": [],
+  "notes": "Import this workflow into n8n and add HTTP trigger -> HTTP Request (to subagent) -> Conditional -> Storage/Alert"
+}
