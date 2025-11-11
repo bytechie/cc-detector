@@ -1,7 +1,7 @@
-version: '3.8'
+# version: '3.8'
 services:
   presidio-analyzer:
-    image: mcr.microsoft.com/presidio/presidio-analyzer:latest
+    image: mcr.microsoft.com/presidio-analyzer:latest
     container_name: presidio-analyzer
     ports:
       - "3000:3000"
@@ -9,7 +9,7 @@ services:
       - ANALYZER_LOG_LEVEL=INFO
 
   presidio-anonymizer:
-    image: mcr.microsoft.com/presidio/presidio-anonymizer:latest
+    image: mcr.microsoft.com/presidio-anonymizer:latest
     container_name: presidio-anonymizer
     ports:
       - "3001:3001"
@@ -17,8 +17,8 @@ services:
       - ANONYMIZER_LOG_LEVEL=INFO
 
   subagent:
-    build: ./claude-subagent
-    container_name: claude-subagent
+    build: ./claude_subagent
+    container_name: claude_subagent
     ports:
       - "5000:5000"
     environment:
