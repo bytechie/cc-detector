@@ -75,6 +75,46 @@ curl -X POST http://localhost:5000/scan \
 
 The response JSON contains two fields: `detections` (list of detection objects) and `redacted` (the redacted string).
 
+## Health checks
+
+The subagent exposes a `/health` endpoint that provides service status and dependency health checks:
+
+```bash
+curl http://localhost:5000/health
+```
+
+Health check response includes:
+- `status`: Overall service status (`ok`, `degraded`)
+- `service`: Name of the subagent service
+- `dependencies`: Health status of Presidio analyzer and anonymizer services
+
+**Example response:**
+```json
+{
+  "status": "ok",
+  "service": "claude-subagent",
+  "dependencies": {
+    "analyzer": {
+      "name": "presidio-analyzer",
+      "status": "healthy",
+      "url": "http://localhost:3000"
+    },
+    "anonymizer": {
+      "name": "presidio-anonymizer",
+      "status": "unreachable",
+      "url": "http://localhost:3001",
+      "error": "Connection refused"
+    }
+  }
+}
+```
+
+**Environment variables for custom Presidio URLs:**
+```bash
+export PRESIDIO_ANALYZER_URL=http://custom-host:3000
+export PRESIDIO_ANONYMIZER_URL=http://custom-host:3001
+```
+
 ## Using Presidio (optional)
 
 To exercise the Presidio-backed skill wrappers, start the analyzer & anonymizer services with Docker Compose:

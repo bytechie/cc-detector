@@ -4,6 +4,7 @@ __pycache__/
 *.egg-info/
 .venv/
 .env
+.claude/
 
 # Pytest cache
 .pytest_cache/
