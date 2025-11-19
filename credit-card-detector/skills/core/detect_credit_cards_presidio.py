@@ -7,7 +7,7 @@ from typing import List, Dict
 
 # local fallback
 try:
-    from claude_subagent.skills import detect_credit_cards as local_detect
+    from .detect_credit_cards import detect_credit_cards as local_detect
 except Exception:
     local_detect = None
 

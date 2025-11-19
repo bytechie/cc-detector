@@ -19,9 +19,9 @@ import asyncio
 import psutil
 from datetime import datetime
 from flask import Flask, request, jsonify
-from claude_subagent.skills import detect_credit_cards, redact_credit_cards
-from claude_subagent.adaptive_skills import AdaptiveSkillManager
-from claude_subagent.skill_seekers_integration import SkillSeekersIntegration
+from skills.core import detect_credit_cards, redact_credit_cards
+from skills.adaptive import AdaptiveSkillManager
+from skills.integration.skill_seekers_integration import SkillSeekersIntegration
 from claude_subagent.resource_management import (
     ResourceConstraints, ResourceType, ConstraintLevel, OptimizationStrategy,
     AdaptiveProcessingEngine, ResourceMonitor, ResourceOptimizer

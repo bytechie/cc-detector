@@ -86,9 +86,9 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./monitoring/prometheus-local.yml:/etc/prometheus/prometheus.yml:ro
+      - ./claude_subagent/monitoring/prometheus/prometheus-local.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_local_data:/prometheus
-      - ./monitoring/rules:/etc/prometheus/rules:ro
+      - ./claude_subagent/monitoring/prometheus/rules:/etc/prometheus/rules:ro
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -115,8 +115,8 @@ services:
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
     volumes:
       - grafana_local_data:/var/lib/grafana
-      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./claude_subagent/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./claude_subagent/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
     networks:
       - local-network
     restart: unless-stopped

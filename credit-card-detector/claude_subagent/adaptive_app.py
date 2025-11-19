@@ -13,8 +13,8 @@ import requests
 import json
 from datetime import datetime
 from flask import Flask, request, jsonify
-from claude_subagent.skills import detect_credit_cards, redact_credit_cards
-from claude_subagent.adaptive_skills import AdaptiveSkillManager, SkillGap
+from skills.core import detect_credit_cards, redact_credit_cards
+from skills.adaptive import AdaptiveSkillManager, SkillGap
 
 app = Flask(__name__)
 

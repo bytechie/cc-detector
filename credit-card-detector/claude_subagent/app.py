@@ -7,7 +7,7 @@ Endpoints:
 import os
 import requests
 from flask import Flask, request, jsonify
-from claude_subagent.skills import detect_credit_cards, redact_credit_cards
+from skills.core import detect_credit_cards, redact_credit_cards
 
 app = Flask(__name__)
 

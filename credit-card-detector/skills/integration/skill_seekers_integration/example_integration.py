@@ -13,8 +13,19 @@ import sys
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from claude_subagent.adaptive_skills import AdaptiveSkillManager
-from claude_subagent.skill_seekers_integration import SkillSeekersIntegration
+try:
+    from skills.adaptive.example_usage import AdaptiveSkillManager
+except ImportError:
+    try:
+        from claude_subagent.adaptive_skills import AdaptiveSkillManager
+    except ImportError:
+        AdaptiveSkillManager = None
+# Import SkillSeekersIntegration - handle circular import by using the class directly
+try:
+    from . import SkillSeekersIntegration
+except ImportError:
+    # For circular import cases, define locally if needed
+    SkillSeekersIntegration = None
 
 
 async def example_basic_integration():

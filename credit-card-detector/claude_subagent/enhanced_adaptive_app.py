@@ -17,9 +17,9 @@ import json
 import asyncio
 from datetime import datetime
 from flask import Flask, request, jsonify
-from claude_subagent.skills import detect_credit_cards, redact_credit_cards
-from claude_subagent.adaptive_skills import AdaptiveSkillManager
-from claude_subagent.skill_seekers_integration import SkillSeekersIntegration
+from skills.core import detect_credit_cards, redact_credit_cards
+from skills.adaptive import AdaptiveSkillManager
+from skills.integration import SkillSeekersIntegration
 
 app = Flask(__name__)
 
@@ -247,7 +247,7 @@ def analyze_conflicts():
     mock_new_skills = []
 
     try:
-        from claude_subagent.skill_seekers_integration import ConflictResolutionEngine
+        from skills.integration import ConflictResolutionEngine
         conflict_resolver = ConflictResolutionEngine()
 
         conflicts = conflict_resolver.detect_conflicts(existing_skills, mock_new_skills)
@@ -407,7 +407,7 @@ def run_example_scenarios():
     scenario = data.get("scenario", "all")
 
     try:
-        from claude_subagent.skill_seekers_integration.example_integration import (
+        from skills.integration.skill_seekers_integration.example_integration import (
             example_basic_integration, example_credit_card_security_skills,
             example_conflict_resolution, example_quality_assessment,
             example_continuous_learning
