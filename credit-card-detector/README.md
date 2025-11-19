@@ -218,6 +218,133 @@ print(f"Average throughput: {stats['avg_throughput']:.1f} items/sec")
 print(f"Cache hit rate: {stats['cache_hit_rate']:.2%}")
 ```
 
+## 📈 **Production Monitoring & Observability**
+
+### 🔍 **Comprehensive Monitoring Stack**
+
+The system includes enterprise-grade monitoring with **Prometheus** and **Grafana** for complete observability.
+
+#### **Quick Start Monitoring**
+
+```bash
+# Start production stack with monitoring
+docker-compose -f docker-compose.production.yml --env-file .env.production up -d
+
+# Access monitoring interfaces
+# Prometheus: http://localhost:9090
+# Grafana: http://localhost:3002
+```
+
+#### **Key Performance Metrics**
+
+| Metric | Description | Target |
+|--------|-------------|--------|
+| **Response Time** | 95th percentile latency | < 100ms |
+| **Throughput** | Requests per second | Monitor baseline |
+| **Detection Rate** | Cards found per minute | Track volume |
+| **Error Rate** | Failed requests percentage | < 1% |
+| **Availability** | Service uptime | > 99.9% |
+
+#### **Monitoring Dashboard**
+
+The pre-built Grafana dashboard includes:
+
+- 🎯 **Request Metrics**: Rate, total count, response times
+- 📊 **Detection Analytics**: Valid/invalid card ratios
+- 💾 **System Resources**: Memory, CPU, network usage
+- 🚨 **Health Status**: Service dependencies and uptime
+- 📈 **Performance Trends**: Historical data and predictions
+
+**Import Dashboard:**
+1. Go to http://localhost:3002
+2. Dashboards → Import
+3. Upload `monitoring/grafana/dashboards/credit-card-dashboard.json`
+
+#### **Essential Prometheus Queries**
+
+```promql
+# Service availability
+up{job="credit-card-detector"}
+
+# Request rate (per second)
+rate(credit_card_detector_requests_total[5m])
+
+# Response time percentiles
+histogram_quantile(0.95, rate(credit_card_detector_request_duration_seconds_bucket[5m]))
+
+# Credit card detection rate
+rate(credit_card_detections_total[5m]) by (valid_luhn)
+
+# Error rate monitoring
+rate(credit_card_scan_requests_total{has_detections="error"}[5m])
+
+# Active connections
+credit_card_detector_active_connections
+```
+
+#### **Performance Testing & Monitoring**
+
+```bash
+# Run comprehensive monitoring test
+python3 monitor_credit_card_performance.py
+
+# Test credit card detection with metrics
+curl -X POST http://localhost:5000/scan \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Test card: 4111111111111111"}'
+
+# Check real-time metrics
+curl http://localhost:9090/api/v1/query?query=up
+```
+
+#### **Alerting Setup**
+
+Configure alerts for:
+
+```yaml
+# High response time alert
+- alert: HighResponseTime
+  expr: histogram_quantile(0.95, rate(credit_card_detector_request_duration_seconds_bucket[5m])) > 0.1
+  for: 2m
+  labels:
+    severity: warning
+  annotations:
+    summary: "High response time detected"
+
+# High error rate alert
+- alert: HighErrorRate
+  expr: rate(credit_card_scan_requests_total{has_detections="error"}[5m]) > 0.01
+  for: 1m
+  labels:
+    severity: critical
+  annotations:
+    summary: "High error rate detected"
+```
+
+#### **Monitoring Infrastructure Components**
+
+- **Prometheus**: Metrics collection and storage (30-day retention)
+- **Grafana**: Visualization and dashboarding
+- **Node Exporter**: System metrics (optional)
+- **cAdvisor**: Container metrics (optional)
+
+#### **Production Deployment Monitoring**
+
+```bash
+# Check all service status
+docker-compose -f docker-compose.production.yml ps
+
+# View monitoring stack logs
+docker-compose logs -f prometheus grafana
+
+# Monitor resource usage
+docker stats
+
+# Check health endpoints
+curl http://localhost:9090/api/v1/status/config
+curl http://localhost:3002/api/health
+```
+
 ## 🐳️ Docker Deployment
 
 ### Quick Start with Docker

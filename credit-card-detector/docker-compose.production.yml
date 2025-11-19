@@ -1,12 +1,9 @@
-version: '3.8'
-
 services:
   # Main Application
   credit-card-detector:
     build:
       context: .
       target: production
-    container_name: credit-card-detector-prod
     ports:
       - "5000:5000"
     environment:
@@ -166,7 +163,6 @@ services:
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--storage.tsdb.retention.time=30d'
       - '--web.enable-lifecycle'
-      - '--rule.files=/etc/prometheus/rules/*.yml'
     networks:
       - app-network
     restart: unless-stopped
@@ -181,7 +177,7 @@ services:
     image: grafana/grafana:latest
     container_name: grafana-prod
     ports:
-      - "3000:3000"
+      - "3002:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}

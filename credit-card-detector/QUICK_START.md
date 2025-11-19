@@ -10,13 +10,33 @@ Get up and running with the Credit Card Detector in minutes.
 - 2 CPU cores minimum
 - 20 GB disk space
 
-### Option 1: Docker (Recommended)
+### Option 1: Local Development with Monitoring (Recommended)
 
 ```bash
 # Clone the repository
 git clone https://github.com/claude-subagent/credit-card-detector.git
 cd credit-card-detector
 
+# Start local monitoring stack (includes enhanced metrics)
+./start-local-monitoring.sh
+
+# Services available:
+# • Credit Card Detector: http://localhost:5000
+# • Metrics endpoint: http://localhost:5000/metrics
+# • Health check: http://localhost:5000/health
+# • Prometheus: http://localhost:9090
+# • Grafana: http://localhost:3002 (admin/admin123)
+
+# Test the API
+curl http://localhost:5000/health
+
+# Stop services when done
+./stop-local-monitoring.sh
+```
+
+### Option 2: Docker Basic
+
+```bash
 # Start with minimum resources (2GB RAM, 1-2 CPU cores)
 docker-compose up -d
 
@@ -27,7 +47,7 @@ docker stats
 curl http://localhost:5000/health
 ```
 
-### Option 2: Python Package
+### Option 3: Python Package
 
 ```bash
 # Install the package
@@ -69,6 +89,18 @@ result = detector.scan_enhanced(
 curl -X POST http://localhost:5000/scan \
   -H "Content-Type: application/json" \
   -d '{"text": "Card: 4111111111111111"}'
+
+# Example response:
+# {
+#   "detections": [{"end": 25, "number": "4111111111111111", "raw": "4111111111111111", "start": 9, "valid": true}],
+#   "metrics": {"cards_detected": 1, "invalid_cards": 0, "scan_duration_seconds": 0.0001, "valid_cards": 1},
+#   "redacted": "Card: [REDACTED]"
+# }
+
+# Test different card formats
+curl -X POST http://localhost:5000/scan \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Cards: 4111 1111 1111 1111, 5555-5555-5555-4444, 378282246310005"}'
 
 # Enhanced scan
 curl -X POST http://localhost:5000/scan-enhanced \
@@ -141,28 +173,188 @@ from claude_subagent.resource_management import initialize_resource_manager
 rm = initialize_resource_manager(profile="production")
 ```
 
-## 📈 Monitoring Resources
+## 📈 Production Monitoring & Observability
 
-### Check Resource Usage
+### 🚀 Local Development Monitoring (Recommended)
+
 ```bash
-# Docker stats
+# Start local monitoring stack with enhanced metrics
+./start-local-monitoring.sh
+
+# Access monitoring interfaces:
+# • Credit Card Detector: http://localhost:5000
+# • Metrics endpoint: http://localhost:5000/metrics
+# • Health check: http://localhost:5000/health
+# • Prometheus: http://localhost:9090
+# • Grafana: http://localhost:3002 (admin/admin123)
+
+# Stop when done
+./stop-local-monitoring.sh
+```
+
+### 🚀 Production Monitoring
+
+```bash
+# Start production stack with monitoring
+docker-compose -f docker-compose.production.yml --env-file .env.production up -d
+
+# Access monitoring interfaces
+# Prometheus: http://localhost:9090
+# Grafana: http://localhost:3002
+```
+
+### 📊 Essential Monitoring Commands
+
+```bash
+# Check all service status
+docker-compose -f docker-compose.production.yml ps
+
+# Check resource usage
 docker stats
 
-# System resources
-curl http://localhost:5000/resource-monitor
+# Run comprehensive monitoring test
+python3 monitor_credit_card_performance.py
 
-# Performance stats
-curl http://localhost:5000/performance-stats
-
-# Health check
-curl http://localhost:5000/health
+# View monitoring stack logs
+docker-compose logs -f prometheus grafana
 ```
 
-### Resource Recommendations
+### 🎯 Key Metrics to Monitor
+
+| Metric | Command | Target |
+|--------|---------|--------|
+| **Service Status** | `curl http://localhost:9090/api/v1/query?query=up` | All services up |
+| **Response Time** | See Grafana dashboard | < 100ms (95th percentile) |
+| **Error Rate** | See Grafana dashboard | < 1% |
+| **Throughput** | See Grafana dashboard | Baseline monitoring |
+
+### 📈 Grafana Dashboard Setup
+
+1. **Access Grafana**: http://localhost:3002
+2. **Login** with your credentials
+3. **Import Dashboard**:
+   - Go to Dashboards → Import
+   - Upload `monitoring/grafana/dashboards/credit-card-dashboard.json`
+   - Select Prometheus as data source
+
+### 🔍 Prometheus Queries
+
 ```bash
-# Get optimization recommendations
-curl http://localhost:5000/resource-recommendations
+# Check service availability
+curl "http://localhost:9090/api/v1/query?query=up"
+
+# Monitor request rate
+curl "http://localhost:9090/api/v1/query?query=rate(credit_card_detector_requests_total[5m])"
+
+# Check response times
+curl "http://localhost:9090/api/v1/query?query=histogram_quantile(0.95, rate(credit_card_detector_request_duration_seconds_bucket[5m]))"
 ```
+
+### 🧪 Test Detection Performance
+
+```bash
+# Test the detection API
+curl -X POST http://localhost:5000/scan \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Test card: 4111111111111111"}'
+
+# Test different card formats
+curl -X POST http://localhost:5000/scan \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Cards: 4111 1111 1111 1111, 5555-5555-5555-4444, 378282246310005"}'
+
+# Test invalid cards (should be detected but marked as invalid)
+curl -X POST http://localhost:5000/scan \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Invalid card: 1234 5678 9012 3456"}'
+
+# Test multiple cards in one text
+curl -X POST http://localhost:5000/scan \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Multiple cards: 4111111111111111 (Visa), 5555555555554444 (Mastercard), 378282246310005 (Amex)"}'
+
+# Run performance test suite
+python3 test_credit_card_detection.py
+
+# Check metrics after testing
+curl -s http://localhost:5000/metrics | grep credit_card
+```
+
+### 🚨 Basic Alerting
+
+The system includes pre-configured alerts for:
+- High response times (>100ms)
+- High error rates (>1%)
+- Service downtime
+- Resource exhaustion
+
+### 📋 Monitoring Checklist
+
+- [ ] Services running: `docker ps` or `docker-compose ps`
+- [ ] API health check: `curl http://localhost:5000/health`
+- [ ] Metrics endpoint: `curl http://localhost:5000/metrics`
+- [ ] Prometheus accessible: http://localhost:9090
+- [ ] Grafana accessible: http://localhost:3002 (admin/admin123)
+- [ ] Dashboard imported and showing data
+- [ ] Metrics being collected: Check Prometheus targets
+- [ ] No critical alerts firing
+
+### 🧪 Enhanced Testing Examples
+
+The system has been tested with various credit card formats and scenarios:
+
+**Valid Card Detection:**
+```bash
+# Visa (valid Luhn)
+curl -X POST http://localhost:5000/scan \
+  -H "Content-Type: application/json" \
+  -d '{"text": "My Visa: 4111111111111111"}'
+
+# Mastercard (valid Luhn)
+curl -X POST http://localhost:5000/scan \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Mastercard: 5555555555554444"}'
+
+# Amex (valid Luhn)
+curl -X POST http://localhost:5000/scan \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Amex: 378282246310005"}'
+```
+
+**Format Variations:**
+```bash
+# Spaces and dashes are handled correctly
+curl -X POST http://localhost:5000/scan \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Cards: 4111 1111 1111 1111, 5555-5555-5555-4444"}'
+```
+
+**Validation Testing:**
+```bash
+# Invalid Luhn checksum (detected but marked invalid)
+curl -X POST http://localhost:5000/scan \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Invalid: 1234 5678 9012 3456"}'
+
+# Phone numbers (correctly ignored)
+curl -X POST http://localhost:5000/scan \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Call me at 123-456-7890"}'
+```
+
+**Performance Metrics (from recent tests):**
+- ✅ Detection Speed: ~0.0001 seconds per scan
+- ✅ Multiple Cards: Detects 3+ cards in one text
+- ✅ Format Support: Spaces, dashes, plain numbers
+- ✅ Validation: Distinguishes valid vs invalid Luhn checksums
+- ✅ Redaction: Properly masks detected cards
+
+### 🔧 Advanced Monitoring
+
+For detailed monitoring setup, see:
+- **README.md**: Complete monitoring guide
+- **monitoring/grafana/dashboards/**: Dashboard configurations
+- **monitoring/prometheus.yml**: Prometheus configuration
 
 ## ⚡ Performance Tips
 
@@ -251,6 +443,21 @@ curl -X POST http://localhost:5000/benchmark-processing \
 
 ## 🚨 Common Issues
 
+### Services Won't Start
+```bash
+# Check for port conflicts
+netstat -tulpn | grep -E "(5000|3000|3001|9090|3002|5432|6379)"
+
+# Stop existing services
+./stop-local-monitoring.sh
+
+# Clean up orphaned containers
+docker container prune -f
+
+# Restart fresh
+./start-local-monitoring.sh
+```
+
 ### High Memory Usage
 ```bash
 # Check memory usage
@@ -261,6 +468,10 @@ docker-compose restart
 
 # Adjust memory limits
 export MAX_MEMORY_PERCENT=60
+
+# Stop and restart services
+./stop-local-monitoring.sh
+./start-local-monitoring.sh
 ```
 
 ### High CPU Usage
@@ -284,6 +495,19 @@ curl http://localhost:5000/resource-recommendations
 
 # Switch to performance profile
 export RESOURCE_PROFILE=enterprise
+```
+
+### Grafana/Prometheus Not Accessible
+```bash
+# Check if services are running
+docker ps | grep -E "(grafana|prometheus)"
+
+# Check logs
+docker-compose logs -f grafana prometheus
+
+# Restart monitoring services
+./stop-local-monitoring.sh
+./start-local-monitoring.sh
 ```
 
 ## 📚 Next Steps

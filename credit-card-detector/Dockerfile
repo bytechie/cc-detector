@@ -2,7 +2,7 @@
 # Optimized for production with security best practices
 
 # Base stage
-FROM python:3.12-slim as base
+FROM python:3.12-slim AS base
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y \
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 
 # Dependencies stage
-FROM base as dependencies
+FROM base AS dependencies
 
 WORKDIR /app
 
@@ -40,7 +40,7 @@ RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
 # Development stage
-FROM dependencies as development
+FROM dependencies AS development
 
 # Install development dependencies
 RUN pip install -r requirements-dev.txt
@@ -64,7 +64,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 CMD ["python", "-m", "claude_subagent.resource_aware_adaptive_app"]
 
 # Production stage
-FROM base as production
+FROM base AS production
 
 # Install only production dependencies
 WORKDIR /app
@@ -106,13 +106,13 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "120", "claude_subagent.resource_aware_adaptive_app:app"]
 
 # Testing stage
-FROM development as testing
+FROM development AS testing
 
 # Run tests
 RUN python -m pytest tests/ -v --cov=claude_subagent
 
 # Security scanning stage
-FROM production as security-scanner
+FROM production AS security-scanner
 
 # Install security scanning tools
 RUN pip install bandit safety
@@ -122,7 +122,7 @@ RUN bandit -r claude_subagent/ -f json -o bandit-report.json || true
 RUN safety check --json --output safety-report.json || true
 
 # Plugin builder stage
-FROM base as plugin-builder
+FROM base AS plugin-builder
 
 WORKDIR /app
 
@@ -137,4 +137,4 @@ COPY scripts/build_plugin.py ./scripts/
 CMD ["python", "scripts/build_plugin.py"]
 
 # Final stage (default)
-FROM production
+FROM production AS final
