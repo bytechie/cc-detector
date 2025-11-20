@@ -1,0 +1,194 @@
+# Credit Card Detector - Application Configuration
+# This file defines configuration for different application modes
+
+# Global settings
+global:
+  service_name: "Credit Card Detector"
+  version: "3.0.0-unified"
+
+  # Logging configuration
+  logging:
+    level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+  # Service endpoints
+  endpoints:
+    port: 5000
+    host: "0.0.0.0"
+
+  # External service configuration
+  services:
+    presidio:
+      analyzer_url: "${PRESIDIO_ANALYZER_URL:http://localhost:3000}"
+      anonymizer_url: "${PRESIDIO_ANONYMIZER_URL:http://localhost:3001}"
+      timeout: 5
+
+# Mode-specific configurations
+modes:
+  # Basic mode: Simple detection and redaction
+  basic:
+    description: "Basic credit card detection and redaction"
+    features:
+      detection: true
+      redaction: true
+      metrics: false
+      adaptive: false
+      resource_monitoring: false
+
+  # Metrics mode: Basic + Prometheus metrics
+  metrics:
+    description: "Basic detection with Prometheus metrics monitoring"
+    features:
+      detection: true
+      redaction: true
+      metrics: true
+      adaptive: false
+      resource_monitoring: false
+
+  # Adaptive mode: Basic + Adaptive skills system
+  adaptive:
+    description: "Detection with adaptive AI-powered skill system"
+    features:
+      detection: true
+      redaction: true
+      metrics: false
+      adaptive: true
+      resource_monitoring: false
+
+    # Adaptive-specific settings
+    adaptive_settings:
+      skills_dir: "adaptive_skills_generated"
+      auto_training: true
+      quality_threshold: 0.6
+      max_skills: 50
+
+  # Resource-aware mode: Basic + System resource monitoring
+  resource_aware:
+    description: "Detection with system resource monitoring and optimization"
+    features:
+      detection: true
+      redaction: true
+      metrics: false
+      adaptive: false
+      resource_monitoring: true
+
+    # Resource-specific settings
+    resource_settings:
+      monitoring_interval: 30  # seconds
+      memory_threshold: 80     # percent
+      cpu_threshold: 90        # percent
+
+  # Full mode: All features enabled
+  full:
+    description: "Complete feature set including metrics, adaptive skills, and resource monitoring"
+    features:
+      detection: true
+      redaction: true
+      metrics: true
+      adaptive: true
+      resource_monitoring: true
+
+    # Combine all settings
+    adaptive_settings:
+      skills_dir: "adaptive_skills_generated"
+      auto_training: true
+      quality_threshold: 0.6
+      max_skills: 50
+
+    resource_settings:
+      monitoring_interval: 30
+      memory_threshold: 80
+      cpu_threshold: 90
+
+# Environment-specific configurations
+environments:
+  development:
+    logging:
+      level: "DEBUG"
+
+    services:
+      presidio:
+        analyzer_url: "http://localhost:3000"
+        anonymizer_url: "http://localhost:3001"
+
+  staging:
+    logging:
+      level: "INFO"
+
+    services:
+      presidio:
+        analyzer_url: "http://presidio-analyzer-staging:3000"
+        anonymizer_url: "http://presidio-anonymizer-staging:3001"
+
+  production:
+    logging:
+      level: "WARNING"
+
+    services:
+      presidio:
+        analyzer_url: "http://presidio-analyzer:3000"
+        anonymizer_url: "http://presidio-anonymizer:3001"
+
+# Performance tuning settings
+performance:
+  # Detection settings
+  detection:
+    max_text_length: 1000000  # 1MB max text size
+    timeout: 30              # seconds per request
+
+  # Concurrent processing
+  concurrency:
+    max_workers: 4
+    queue_size: 100
+
+# Security settings
+security:
+  # Rate limiting
+  rate_limiting:
+    enabled: false
+    requests_per_minute: 60
+
+  # Request validation
+  validation:
+    max_text_length: 1000000
+    allowed_mime_types: ["application/json"]
+
+  # CORS settings
+  cors:
+    enabled: false
+    origins: ["*"]
+
+# Monitoring and alerting
+monitoring:
+  # Health check settings
+  health_check:
+    enabled: true
+    interval: 30  # seconds
+
+  # Metrics settings
+  metrics:
+    enabled: false
+    endpoint: "/metrics"
+
+  # Alerting thresholds
+  alerts:
+    error_rate_threshold: 5  # percent
+    response_time_threshold: 1000  # milliseconds
+    memory_usage_threshold: 85  # percent
+
+# Skill management (for adaptive mode)
+skills:
+  # Skill discovery
+  discovery:
+    enabled: true
+    scan_interval: 300  # seconds (5 minutes)
+
+  # Skill performance tracking
+  performance:
+    min_requests: 10
+    success_rate_threshold: 0.8
+
+  # Skill generation
+  generation:
+    max_attempts: 3
+    timeout: 60  # seconds

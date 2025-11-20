@@ -13,6 +13,7 @@ tests/
 ├── test_adaptive_skills.py                # Adaptive skills tests
 ├── test_credit_card_detection.py          # Comprehensive detection tests
 ├── test_detector.py                       # Core detector functionality
+├── test_detector_legacy.py                # Legacy detector compatibility tests
 ├── test_health.py                         # Health check tests
 ├── test_skill_seekers_integration.py     # Integration tests
 └── test_subagent.py                       # Subagent functionality tests
@@ -29,6 +30,9 @@ pytest tests/
 ```bash
 # Core detection tests
 pytest tests/test_credit_card_detection.py tests/test_detector.py
+
+# Legacy compatibility tests
+pytest tests/test_detector_legacy.py
 
 # Integration tests
 pytest tests/test_skill_seekers_integration.py
@@ -54,6 +58,7 @@ pytest -v tests/
 
 ### **Core Functionality Tests**
 - `test_detector.py` - Basic credit card detection
+- `test_detector_legacy.py` - Legacy detector compatibility tests
 - `test_credit_card_detection.py` - Comprehensive detection scenarios
 - `test_health.py` - API health checks
 

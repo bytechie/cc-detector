@@ -16,13 +16,14 @@ services:
     environment:
       - ANONYMIZER_LOG_LEVEL=INFO
 
-  subagent:
-    build: ./claude_subagent
-    container_name: claude_subagent
+  credit-card-detector:
+    build: .
+    container_name: credit-card-detector
     ports:
       - "5000:5000"
     environment:
-      - SUBAGENT_PORT=5000
+      - FLASK_ENV=development
+      - SUBAGENT_MODE=basic
     depends_on:
       - presidio-analyzer
       - presidio-anonymizer

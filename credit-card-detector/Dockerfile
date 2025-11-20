@@ -61,7 +61,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5000/health || exit 1
 
 # Default command for development
-CMD ["python", "-m", "claude_subagent.resource_aware_adaptive_app"]
+CMD ["python", "app.py", "--mode", "basic"]
 
 # Production stage
 FROM base AS production
@@ -74,7 +74,8 @@ RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
 # Copy application code
-COPY claude_subagent/ ./claude_subagent/
+COPY app.py ./
+COPY skills/ ./skills/
 COPY config/ ./config/
 COPY README.md .
 
@@ -84,7 +85,7 @@ RUN mkdir -p logs data plugins skills && \
 
 # Set up configuration
 ENV FLASK_ENV=production \
-    FLASK_APP=claude_subagent.resource_aware_adaptive_app
+    FLASK_APP=app
 
 # Security: Remove unnecessary packages
 RUN apt-get remove -y gcc g++ build-essential && \
@@ -103,13 +104,13 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5000/health || exit 1
 
 # Production command
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "120", "claude_subagent.resource_aware_adaptive_app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "120", "app:app"]
 
 # Testing stage
 FROM development AS testing
 
 # Run tests
-RUN python -m pytest tests/ -v --cov=claude_subagent
+RUN python -m pytest tests/ -v --cov=skills
 
 # Security scanning stage
 FROM production AS security-scanner

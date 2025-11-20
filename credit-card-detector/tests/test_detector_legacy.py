@@ -23,3 +23,7 @@ def test_formatted_with_spaces():
     res = find_credit_cards(text)
     assert res and res[0]['number'] == "4111111111111111"
     assert res[0]['valid']
+
+
+# Note: This test uses the legacy cc_detector import path
+# Use test_detector.py for current credit-card-detector implementation

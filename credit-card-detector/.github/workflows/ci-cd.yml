@@ -33,20 +33,20 @@ jobs:
 
       - name: Lint with flake8
         run: |
-          flake8 claude_subagent/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
-          flake8 claude_subagent/ tests/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          flake8 app.py skills/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 app.py skills/ tests/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
       - name: Format check with black
-        run: black --check claude_subagent/ tests/
+        run: black --check app.py skills/ tests/
 
       - name: Import sort check with isort
-        run: isort --check-only claude_subagent/ tests/
+        run: isort --check-only app.py skills/ tests/
 
       - name: Type check with mypy
-        run: mypy claude_subagent/ --ignore-missing-imports
+        run: mypy app.py skills/ --ignore-missing-imports
 
       - name: Security check with bandit
-        run: bandit -r claude_subagent/ -f json -o bandit-report.json || true
+        run: bandit -r app.py skills/ -f json -o bandit-report.json || true
 
       - name: Check dependencies for security vulnerabilities
         run: safety check --json --output safety-report.json || true
@@ -94,7 +94,8 @@ jobs:
         run: |
           pytest tests/ \
             -m "unit" \
-            --cov=claude_subagent \
+            --cov=skills \
+            --cov=app.py \
             --cov-report=xml \
             --cov-report=html \
             --cov-report=term-missing \
@@ -233,7 +234,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: claude-subagent/credit-card-detector
+          images: credit-card-detector
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -339,11 +340,11 @@ jobs:
 
       - name: Test plugin system
         run: |
-          pytest tests/test_plugin_system.py -v
+          pytest tests/test_subagent.py -v
 
-      - name: Load and test example plugins
+      - name: Load and test core functionality
         run: |
-          python -m pytest tests/test_plugins/ -v
+          python -m pytest tests/test_credit_card_detection.py tests/test_health.py -v
 
   # Documentation Build
   build-docs:
@@ -416,7 +417,7 @@ jobs:
 
             ## Installation
             ```bash
-            docker pull claude-subagent/credit-card-detector:v${{ github.run_number }}
+            docker pull credit-card-detector:v${{ github.run_number }}
             ```
           draft: false
           prerelease: false

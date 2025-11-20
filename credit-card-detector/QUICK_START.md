@@ -1,6 +1,6 @@
 # 🚀 Quick Start Guide
 
-Get up and running with the Credit Card Detector in minutes.
+Get up and running with the Credit Card Detector in minutes using the new unified application structure.
 
 ## ⚡ Quick Start (Development)
 
@@ -10,118 +10,272 @@ Get up and running with the Credit Card Detector in minutes.
 - 2 CPU cores minimum
 - 20 GB disk space
 
-### Option 1: Local Development with Monitoring (Recommended)
+### Option 1: Basic Mode (Fastest Start)
 
 ```bash
 # Clone the repository
 git clone https://github.com/claude-subagent/credit-card-detector.git
 cd credit-card-detector
 
-# Start local monitoring stack (includes enhanced metrics)
-./start-local-monitoring.sh
+# Install dependencies
+pip install -r requirements.txt
+
+# Start in basic mode
+python app.py --mode basic
+
+# Test the API
+curl -X POST http://localhost:5000/scan \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Credit card: 4111111111111111"}'
+
+# Check health
+curl http://localhost:5000/health
+```
+
+### Option 2: With Monitoring (Recommended)
+
+```bash
+# Start with monitoring metrics
+python app.py --mode metrics
 
 # Services available:
 # • Credit Card Detector: http://localhost:5000
 # • Metrics endpoint: http://localhost:5000/metrics
 # • Health check: http://localhost:5000/health
-# • Prometheus: http://localhost:9090
-# • Grafana: http://localhost:3002 (admin/admin123)
+
+# Test with metrics
+curl http://localhost:5000/metrics
+```
+
+### Option 3: Full Feature Set
+
+```bash
+# Start with all features (monitoring + adaptive skills + resource awareness)
+python app.py --mode full
+
+# Full feature set available:
+# • All detection capabilities
+# • Prometheus metrics
+# • AI-powered adaptive skills
+# • Resource monitoring
+# • Advanced endpoints
+```
+
+### Option 4: Docker Deployment
+
+```bash
+# Start with Docker
+docker-compose -f docker-compose.local.yml up -d
+
+# Check services
+docker-compose -f docker-compose.local.yml ps
 
 # Test the API
 curl http://localhost:5000/health
-
-# Stop services when done
-./stop-local-monitoring.sh
 ```
 
-### Option 2: Docker Basic
+### Option 5: Using Configuration
 
 ```bash
-# Start with minimum resources (2GB RAM, 1-2 CPU cores)
-docker-compose up -d
+# Use development environment
+cp config/environments/development.env .env
 
-# Check resource usage
-docker stats
+# Start with configuration file
+python app.py --mode full --config config/app-config.yaml
 
-# Test the API
-curl http://localhost:5000/health
-```
-
-### Option 3: Python Package
-
-```bash
-# Install the package
-pip install claude-subagent-credit-card-detector
-
-# Basic usage
-python -c "
-from claude_subagent import CreditCardDetector
-detector = CreditCardDetector()
-result = detector.scan('Credit card: 4111111111111111')
-print(f'Found {len(result.detections)} cards')
-"
+# Override with environment variables
+export APP_MODE=metrics
+export LOG_LEVEL=DEBUG
+python app.py
 ```
 
 ## 🔧 Basic Usage
 
-### Python SDK
-```python
-from claude_subagent import CreditCardDetector
+### Direct API Usage
 
-# Initialize
-detector = CreditCardDetector()
+```bash
+# Basic detection
+curl -X POST http://localhost:5000/scan \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Credit card: 4111111111111111"}'
+
+# Multiple cards
+curl -X POST http://localhost:5000/scan \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Cards: 4111111111111111, 5555555555554444"}'
+
+# With different formats
+curl -X POST http://localhost:5000/scan \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Visa: 4111-1111-1111-1111, Amex: 378282246310005"}'
+```
+
+### Python SDK Usage
+
+```python
+from skills.core.detect_credit_cards import detect
+from skills.core.redact_credit_cards import redact
 
 # Simple detection
-result = detector.scan("Card: 4111111111111111")
-print(f"Detections: {len(result.detections)}")
+text = "Credit card: 4111111111111111"
+detections = detect(text)
+print(f"Found {len(detections)} cards")
 
-# Enhanced detection with AI optimization
-result = detector.scan_enhanced(
-    "Multiple cards: 4111111111111111, 4242-4242-4242-4242",
-    resource_aware=True,
-    use_all_skills=True
-)
+# Redaction
+redacted = redact(text, detections)
+print(f"Redacted: {redacted}")
+
+# Multiple formats
+text = "Cards: 4111111111111111, 4111-1111-1111-1111, 4111 1111 1111 1111"
+detections = detect(text)
+for detection in detections:
+    print(f"Card: {detection['number']} (Valid: {detection['valid']})")
 ```
 
-### REST API
+### Application Mode Examples
+
 ```bash
-# Basic scan
-curl -X POST http://localhost:5000/scan \
-  -H "Content-Type: application/json" \
-  -d '{"text": "Card: 4111111111111111"}'
+# Basic mode - simple detection and redaction
+python app.py --mode basic
 
-# Example response:
-# {
-#   "detections": [{"end": 25, "number": "4111111111111111", "raw": "4111111111111111", "start": 9, "valid": true}],
-#   "metrics": {"cards_detected": 1, "invalid_cards": 0, "scan_duration_seconds": 0.0001, "valid_cards": 1},
-#   "redacted": "Card: [REDACTED]"
-# }
+# Metrics mode - adds Prometheus monitoring
+python app.py --mode metrics
+# Then visit: http://localhost:5000/metrics
 
-# Test different card formats
-curl -X POST http://localhost:5000/scan \
-  -H "Content-Type: application/json" \
-  -d '{"text": "Cards: 4111 1111 1111 1111, 5555-5555-5555-4444, 378282246310005"}'
+# Adaptive mode - AI-powered skills
+python app.py --mode adaptive
+# Then check: http://localhost:5000/skills
 
-# Enhanced scan
-curl -X POST http://localhost:5000/scan-enhanced \
-  -H "Content-Type: application/json" \
-  -d '{
-    "text": "Card: 4111111111111111",
-    "options": {
-      "resource_aware": true,
-      "use_all_skills": true
-    }
-  }'
+# Resource-aware mode - system monitoring
+python app.py --mode resource_aware
+# Then check: http://localhost:5000/resources
+
+# Full mode - everything enabled
+python app.py --mode full
+# All endpoints available: /scan, /metrics, /skills, /resources, /health
 ```
 
-### JavaScript SDK
-```javascript
-import { CreditCardDetector } from '@claude-subagent/javascript-sdk';
+## 📚 Learn More
 
-const detector = new CreditCardDetector();
-const result = await detector.scan('Card: 4111111111111111');
-console.log(`Found ${result.detections.length} cards`);
+### Examples and Demos
+
+The `examples/` directory contains comprehensive usage examples:
+
+```bash
+# Basic detection examples
+cd examples/basic_usage
+python simple_detection.py
+python basic_redaction.py
+
+# Monitoring demo
+cd examples/monitoring
+python metrics_demo.py
+
+# Performance testing
+cd examples/performance
+python load_testing.py
 ```
+
+### Configuration
+
+See the `config/` directory for detailed configuration options:
+
+```bash
+# View application configuration
+cat config/app-config.yaml
+
+# Check environment-specific settings
+ls config/environments/
+
+# Use production environment
+cp config/environments/production.env .env
+python app.py --mode full
+```
+
+### Advanced Features
+
+**Adaptive Skills Mode:**
+```bash
+python app.py --mode adaptive
+# Check available skills:
+curl http://localhost:5000/skills
+
+# View skill performance:
+curl http://localhost:5000/skill-performance
+```
+
+**Resource Monitoring Mode:**
+```bash
+python app.py --mode resource_aware
+# Check system resources:
+curl http://localhost:5000/resources
+```
+
+**Full Feature Mode:**
+```bash
+python app.py --mode full
+# All endpoints available:
+# • /scan - Detection and redaction
+# • /metrics - Prometheus metrics
+# • /skills - Adaptive skills management
+# • /resources - Resource monitoring
+# • /health - System health
+```
+
+## 🛠️ Troubleshooting
+
+### Common Issues
+
+1. **Import Errors:**
+```bash
+# Ensure you're in the correct directory
+cd credit-card-detector
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+2. **Port Already in Use:**
+```bash
+# Use different port
+python app.py --mode basic --port 5001
+
+# Or kill existing process
+lsof -ti:5000 | xargs kill
+```
+
+3. **Missing Dependencies:**
+```bash
+# Install optional dependencies for monitoring
+pip install prometheus-client
+
+# Install optional dependencies for adaptive skills
+pip install scikit-learn
+
+# Install optional dependencies for resource monitoring
+pip install psutil
+```
+
+### Getting Help
+
+- **Examples**: See `examples/` directory for usage examples
+- **Configuration**: See `config/README.md` for configuration guide
+- **API Documentation**: Check `/` endpoint for available endpoints
+- **Health Check**: Visit `/health` for system status
+
+## 🎯 Next Steps
+
+1. **Try the Examples**: Run examples in the `examples/` directory
+2. **Read Configuration**: Review `config/README.md` for setup options
+3. **Test Different Modes**: Try `basic`, `metrics`, `adaptive`, `resource_aware`, `full` modes
+4. **Set Up Monitoring**: Configure Prometheus/Grafana for production monitoring
+5. **Deploy**: Use `docker-compose.production.yml` for production deployment
+
+---
+
+**🚀 You're now ready to use the Credit Card Detector!**
+
+For more advanced features and configuration options, see the main [README.md](README.md) and the [Configuration Guide](config/README.md).
 
 ## 📊 Resource Requirements
 

@@ -45,38 +45,124 @@
 ### Installation
 
 ```bash
-# Install the package
-pip install claude-subagent-credit-card-detector
-
-# Or clone the repository
+# Clone the repository
 git clone https://github.com/claude-subagent/credit-card-detector.git
 cd credit-card-detector
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Or install in development mode
 pip install -e .
 ```
 
-### Basic Usage
+### Start the Application
+
+```bash
+# Basic mode - simple detection and redaction
+python app.py --mode basic
+
+# With monitoring metrics
+python app.py --mode metrics
+
+# Full feature set with AI optimization
+python app.py --mode full
+
+# Using configuration file
+python app.py --mode full --config config/app-config.yaml
+```
+
+### API Usage
+
+```bash
+# Basic detection
+curl -X POST http://localhost:5000/scan \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Credit card: 4111111111111111"}'
+
+# With metrics
+curl http://localhost:5000/metrics
+
+# Health check
+curl http://localhost:5000/health
+```
+
+### Python SDK Usage
 
 ```python
-from claude_subagent import CreditCardDetector
-
-# Initialize the detector
-detector = CreditCardDetector()
+from skills.core.detect_credit_cards import detect
+from skills.core.redact_credit_cards import redact
 
 # Simple detection
-result = detector.scan("Credit card: 4111111111111111")
-print(f"Found {len(result.detections)} cards")
+text = "Credit card: 4111111111111111"
+detections = detect(text)
+print(f"Found {len(detections)} cards")
+
+# Redaction
+redacted = redact(text, detections)
+print(f"Redacted: {redacted}")
 ```
 
-### Enhanced Detection with AI Optimization
+## 📁 Project Structure
 
-```python
-# Resource-aware detection that adapts to constraints
-result = detector.scan_enhanced(
-    "Multiple cards: 4111111111111111, 4242-4242-4242-4242",
-    resource_aware=True,
-    use_all_skills=True
-)
+The project has been reorganized for clarity and maintainability:
+
 ```
+credit-card-detector/
+├── app.py                           # 🚀 Unified application entry point
+├── config/                          # ⚙️  Configuration management
+│   ├── app-config.yaml             # Main application configuration
+│   ├── resource-profiles.yaml       # Resource optimization settings
+│   ├── environments/                # Environment-specific configs
+│   │   ├── development.env          # Development settings
+│   │   ├── staging.env              # Staging settings
+│   │   └── production.env           # Production settings
+│   └── README.md                    # Configuration documentation
+├── examples/                        # 📚 Usage examples and demos
+│   ├── basic_usage/                 # Basic detection examples
+│   ├── advanced/                    # Advanced features
+│   ├── performance/                 # Performance testing
+│   └── monitoring/                  # Monitoring setup
+├── skills/                          # 🧠 Detection skills system
+│   ├── core/                        # Core detection and redaction
+│   ├── adaptive/                    # AI-powered adaptive skills
+│   ├── integration/                 # External service integrations
+│   └── security/                    # Security-related skills
+├── tests/                           # 🧪 Test suite
+│   ├── unit/                        # Unit tests
+│   ├── integration/                 # Integration tests
+│   └── performance/                 # Performance tests
+├── deployment/                      # 🐳 Deployment configurations
+│   ├── docker/                      # Docker configurations
+│   └── kubernetes/                  # Kubernetes manifests
+├── docs/                           # 📖 Documentation
+├── monitoring/                     # 📊 Monitoring infrastructure
+├── scripts/                        # 🔧 Utility scripts
+├── legacy_apps/                    # 📦 Backup of old application files
+└── README.md                       # This file
+```
+
+### 🎯 Application Modes
+
+The unified application (`app.py`) supports multiple modes:
+
+| Mode | Description | Features |
+|------|-------------|----------|
+| **basic** | Simple detection and redaction | Core functionality only |
+| **metrics** | Basic + Prometheus monitoring | Performance tracking |
+| **adaptive** | Basic + AI-powered skills | Dynamic optimization |
+| **resource_aware** | Basic + system monitoring | Resource optimization |
+| **full** | All features enabled | Production-ready |
+
+### 🔧 Configuration
+
+The configuration system provides:
+- **Environment-specific settings** - Development, staging, production
+- **Resource profiles** - Optimized for different deployment sizes
+- **Mode-specific features** - Enable/disable features per mode
+- **Security configuration** - Environment variables for sensitive data
+
+See [Configuration Guide](config/README.md) for detailed setup instructions.
 
 ## 🌟️ Architecture
 
