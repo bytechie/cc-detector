@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Unified Startup Script for Credit Card Detector
-# Supports all modes: basic, metrics, production, enterprise
+# Unified Management Script for Credit Card Detector
+# Supports start/stop operations with mode selection
 
 set -e
 
@@ -14,19 +14,29 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Default configuration
-MODE=${1:-"basic"}
-PORT=${2:-5000}
+COMMAND=${1:-"start"}
+MODE=${2:-"basic"}
+PORT=${3:-5000}
 TEST_MODE=${TEST_MODE:-"$MODE"}
 
-echo -e "${BLUE}🚀 Credit Card Detector Unified Startup${NC}"
-echo "========================================"
-echo -e "Mode: ${YELLOW}${MODE}${NC}"
-echo -e "Port: ${YELLOW}${PORT}${NC}"
+echo -e "${BLUE}🚀 Credit Card Detector Manager${NC}"
+echo "=================================="
+echo -e "Command: ${YELLOW}${COMMAND}${NC}"
+if [ "$COMMAND" != "stop" ]; then
+    echo -e "Mode: ${YELLOW}${MODE}${NC}"
+    echo -e "Port: ${YELLOW}${PORT}${NC}"
+fi
 echo ""
 
 # Function to show usage
 show_usage() {
-    echo "Usage: $0 [MODE] [PORT]"
+    echo "Usage: $0 [COMMAND] [MODE] [PORT]"
+    echo ""
+    echo "Available commands:"
+    echo "  start       - Start the Credit Card Detector"
+    echo "  stop        - Stop all running instances"
+    echo "  restart     - Stop and start with same mode"
+    echo "  status      - Show running instances status"
     echo ""
     echo "Available modes:"
     echo "  basic      - Core functionality only (fastest startup)"
@@ -35,15 +45,32 @@ show_usage() {
     echo "  enterprise - Full stack with comprehensive testing"
     echo ""
     echo "Examples:"
-    echo "  $0 basic                # Basic mode on port 5000"
-    echo "  $0 metrics 5001         # Metrics mode on port 5001"
-    echo "  $0 production           # Production mode on port 5000"
-    echo "  $0 enterprise 8080      # Enterprise mode on port 8080"
+    echo "  $0 start basic            # Start basic mode on port 5000"
+    echo "  $0 start metrics 5001     # Start metrics mode on port 5001"
+    echo "  $0 stop                   # Stop all running instances"
+    echo "  $0 restart production     # Restart production mode"
+    echo "  $0 status                 # Show current status"
     echo ""
     echo "Environment variables:"
     echo "  TEST_MODE    - Override testing level (basic|metrics|production|enterprise)"
     echo "  SKIP_TESTS   - Set to 'true' to skip automated testing"
     exit 1
+}
+
+# Function to validate command
+validate_command() {
+    local command=$1
+    case "$command" in
+        start|stop|restart|status)
+            return 0
+            ;;
+        *)
+            echo -e "${RED}❌ Invalid command: $command${NC}"
+            echo ""
+            show_usage
+            return 1
+            ;;
+    esac
 }
 
 # Function to validate mode
@@ -198,38 +225,211 @@ show_service_info() {
     fi
 }
 
-# Main execution
-main() {
-    # Parse arguments
-    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-        show_usage
+# Function to stop application
+stop_application() {
+    echo -e "${CYAN}🛑 Stopping Credit Card Detector instances...${NC}"
+
+    local stopped=false
+
+    # Stop using PID files
+    for pid_file in .basic_app.pid .metrics_app.pid .production_app.pid .enterprise_app.pid; do
+        if [ -f "$pid_file" ]; then
+            local pid=$(cat "$pid_file")
+            if kill -0 "$pid" 2>/dev/null; then
+                echo -e "${YELLOW}Stopping instance with PID $pid...${NC}"
+                kill "$pid" 2>/dev/null || true
+                sleep 2
+                kill -9 "$pid" 2>/dev/null || true
+                stopped=true
+            fi
+            rm -f "$pid_file"
+        fi
+    done
+
+    # Stop any remaining app.py processes
+    local app_pids=$(pgrep -f "python3.*app.py" || true)
+    if [ -n "$app_pids" ]; then
+        echo -e "${YELLOW}Stopping remaining Python app processes...${NC}"
+        echo "$app_pids" | xargs kill 2>/dev/null || true
+        sleep 2
+        echo "$app_pids" | xargs kill -9 2>/dev/null || true
+        stopped=true
     fi
-    
-    validate_mode "$MODE"
-    check_prerequisites
-    
-    # Start application
-    start_application "$MODE" "$PORT"
-    
+
+    # Stop Docker services if running
+    if [ -f "docker-compose.local.yml" ]; then
+        if docker-compose -f docker-compose.local.yml ps -q | grep -q .; then
+            echo -e "${YELLOW}Stopping Docker services...${NC}"
+            docker-compose -f docker-compose.local.yml down 2>/dev/null || true
+            stopped=true
+        fi
+    fi
+
+    if [ "$stopped" = true ]; then
+        echo -e "${GREEN}✅ All instances stopped${NC}"
+    else
+        echo -e "${YELLOW}⚠️ No running instances found${NC}"
+    fi
+}
+
+# Function to show status
+show_status() {
+    echo -e "${CYAN}📊 Credit Card Detector Status${NC}"
+    echo "================================="
+
+    local running=false
+
+    # Check PID files
+    for mode in basic metrics production enterprise; do
+        local pid_file=".${mode}_app.pid"
+        if [ -f "$pid_file" ]; then
+            local pid=$(cat "$pid_file")
+            if kill -0 "$pid" 2>/dev/null; then
+                local port=$(lsof -p "$pid" 2>/dev/null | grep LISTEN | awk '{print $9}' | head -1 || echo "unknown")
+                echo -e "${GREEN}✅ $mode mode running (PID: $pid, Port: ${port:-unknown})${NC}"
+                running=true
+            else
+                echo -e "${RED}❌ $mode mode PID file exists but process not running${NC}"
+                rm -f "$pid_file"
+            fi
+        fi
+    done
+
+    # Check for other app.py processes
+    local app_pids=$(pgrep -f "python3.*app.py" || true)
+    if [ -n "$app_pids" ]; then
+        echo -e "${YELLOW}⚠️ Additional app processes found: $app_pids${NC}"
+        running=true
+    fi
+
+    # Check Docker services
+    if [ -f "docker-compose.local.yml" ]; then
+        local docker_services=$(docker-compose -f docker-compose.local.yml ps --services --filter "status=running" 2>/dev/null || true)
+        if [ -n "$docker_services" ]; then
+            echo -e "${GREEN}✅ Docker services running:${NC}"
+            echo "$docker_services" | sed 's/^/  - /'
+            running=true
+        fi
+    fi
+
+    if [ "$running" = false ]; then
+        echo -e "${YELLOW}⚠️ No running instances found${NC}"
+    fi
+
+    echo ""
+    echo -e "${CYAN}🌐 Port Check:${NC}"
+    for port in 5000 5001 8080; do
+        if lsof -i :$port >/dev/null 2>&1; then
+            echo -e "${GREEN}✅ Port $port is in use${NC}"
+        else
+            echo -e "${GRAY}⚪ Port $port is free${NC}"
+        fi
+    done
+}
+
+# Function to restart application
+restart_application() {
+    local mode=$1
+    local port=$2
+
+    echo -e "${CYAN}🔄 Restarting Credit Card Detector...${NC}"
+
+    # Stop first
+    stop_application
+
+    # Wait a moment
+    sleep 3
+
+    # Start with same mode
+    echo -e "${CYAN}🚀 Starting in $mode mode...${NC}"
+    start_application "$mode" "$port"
+
     # Start additional services if needed
-    case "$MODE" in
+    case "$mode" in
         "production"|"enterprise")
             if [ -f "docker-compose.local.yml" ]; then
                 echo -e "${CYAN}🐳 Starting monitoring stack...${NC}"
                 docker-compose -f docker-compose.local.yml up -d postgres redis presidio-analyzer presidio-anonymizer prometheus grafana
-                
+
                 # Wait for services
                 echo -e "${CYAN}⏳ Waiting for services to be ready...${NC}"
                 sleep 15
             fi
             ;;
     esac
-    
+
     # Run tests
     run_tests "$TEST_MODE"
-    
+
     # Show service information
-    show_service_info "$MODE" "$PORT"
+    show_service_info "$mode" "$port"
+}
+
+# Main execution
+main() {
+    # Parse arguments
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        show_usage
+    fi
+
+    validate_command "$COMMAND"
+
+    case "$COMMAND" in
+        "start")
+            validate_mode "$MODE"
+            check_prerequisites
+
+            # Start application
+            start_application "$MODE" "$PORT"
+
+            # Start additional services if needed
+            case "$MODE" in
+                "production"|"enterprise")
+                    if [ -f "docker-compose.local.yml" ]; then
+                        echo -e "${CYAN}🐳 Starting monitoring stack...${NC}"
+                        docker-compose -f docker-compose.local.yml up -d postgres redis presidio-analyzer presidio-anonymizer prometheus grafana
+
+                        # Wait for services
+                        echo -e "${CYAN}⏳ Waiting for services to be ready...${NC}"
+                        sleep 15
+                    fi
+                    ;;
+            esac
+
+            # Run tests
+            run_tests "$TEST_MODE"
+
+            # Show service information
+            show_service_info "$MODE" "$PORT"
+            ;;
+
+        "stop")
+            stop_application
+            ;;
+
+        "status")
+            show_status
+            ;;
+
+        "restart")
+            # For restart, use the last known mode or default to basic
+            local last_mode="basic"
+            for pid_file in .basic_app.pid .metrics_app.pid .production_app.pid .enterprise_app.pid; do
+                if [ -f "$pid_file" ]; then
+                    last_mode=$(echo "$pid_file" | sed 's/\/\./\//' | cut -d'_' -f1 | sed 's/^\.//')
+                    break
+                fi
+            done
+
+            # Override with provided mode if given
+            if [ "$#" -ge 2 ] && [ "$2" != "" ]; then
+                last_mode="$2"
+            fi
+
+            validate_mode "$last_mode"
+            restart_application "$last_mode" "$PORT"
+            ;;
+    esac
 }
 
 # Trap for cleanup

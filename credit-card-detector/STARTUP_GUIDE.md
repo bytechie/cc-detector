@@ -13,19 +13,25 @@ This guide covers the enhanced startup scripts and mode-appropriate testing infr
 
 ## ⚡ Quick Start
 
-### Unified Startup Script (Recommended)
+### Enhanced Management Script (Recommended)
 ```bash
-# Basic mode - fastest startup
-./start.sh basic
+# NEW: Explicit command syntax
+./start.sh start basic          # Start basic mode on port 5000
+./start.sh start production     # Production mode with monitoring
+./start.sh start enterprise     # Enterprise mode with full testing
+./start.sh start metrics 5001   # Custom port for metrics mode
 
-# Production mode with monitoring
-./start.sh production
+# Process management
+./start.sh stop                 # Stop all running instances
+./start.sh restart              # Restart with same mode
+./start.sh status               # Show running instances and status
 
-# Enterprise mode with full testing
-./start.sh enterprise
+# Backward compatibility (still works)
+./start.sh basic                # Same as "./start.sh start basic"
+./start.sh production           # Same as "./start.sh start production"
 
-# Custom port
-./start.sh metrics 5001
+# Quick stop convenience
+./stop.sh                       # Quick stop all instances
 ```
 
 ### Traditional Startup Scripts
@@ -45,19 +51,30 @@ This guide covers the enhanced startup scripts and mode-appropriate testing infr
 
 ## 🎯 Startup Scripts
 
-### `start.sh` - Unified Startup Script
-The main entry point supporting all modes with automatic testing.
+### `start.sh` - Enhanced Management Script
+The main entry point supporting all operations with automatic testing.
 
 **Usage:**
 ```bash
-./start.sh [MODE] [PORT]
+./start.sh [COMMAND] [MODE] [PORT]
 ```
+
+**Commands:**
+- `start` - Start the Credit Card Detector with specified mode
+- `stop` - Stop all running instances cleanly
+- `restart` - Stop and start with same or specified mode
+- `status` - Show running instances and port usage
 
 **Features:**
 - ✅ Automatic prerequisite checking
 - ✅ Virtual environment management
 - ✅ Mode-appropriate service startup
 - ✅ Integrated testing based on mode
+- ✅ Process tracking with PID files
+- ✅ Smart process detection and cleanup
+- ✅ Docker service integration
+- ✅ Port usage monitoring
+- ✅ Backward compatibility with old syntax
 - ✅ Comprehensive service information display
 
 **Modes:**
@@ -143,7 +160,7 @@ The `run-mode-tests.sh` script provides mode-appropriate testing:
 
 ### Development Mode
 ```bash
-./start.sh basic
+./start.sh start basic
 ```
 **Resources:** ~2GB RAM, 2 CPU cores
 **Services:** Credit Card Detector only
@@ -151,7 +168,7 @@ The `run-mode-tests.sh` script provides mode-appropriate testing:
 
 ### Production Mode
 ```bash
-./start.sh production
+./start.sh start production
 ```
 **Resources:** ~8GB RAM, 4+ CPU cores
 **Services:** Full monitoring stack
@@ -159,11 +176,29 @@ The `run-mode-tests.sh` script provides mode-appropriate testing:
 
 ### Enterprise Mode
 ```bash
-./start.sh enterprise
+./start.sh start enterprise
 ```
 **Resources:** ~16GB RAM, 8+ CPU cores
 **Services:** Full stack with advanced features
 **Testing:** Enterprise-grade validation
+
+### Process Management Examples
+```bash
+# Check what's running
+./start.sh status
+
+# Stop everything
+./start.sh stop
+
+# Restart with same mode
+./start.sh restart
+
+# Restart with different mode
+./start.sh restart production
+
+# Quick stop
+./stop.sh
+```
 
 ## 🐳 Docker Compose Testing
 
@@ -250,7 +285,7 @@ PORT=5001 ./run-mode-tests.sh enterprise
 # Example GitHub Actions
 - name: Run Tests
   run: |
-    ./start.sh basic
+    ./start.sh start basic
     ./run-mode-tests.sh production
 ```
 

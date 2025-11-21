@@ -58,19 +58,26 @@ pip install -e .
 
 ### 🚀 Start the Application
 
-#### Option 1: Unified Startup Script (Recommended)
+#### Option 1: Enhanced Management Script (Recommended)
 ```bash
-# Basic mode - fastest startup with core testing
-./start.sh basic
+# NEW: Explicit command syntax
+./start.sh start basic          # Start basic mode on port 5000
+./start.sh start metrics 5001   # Start metrics mode on port 5001
+./start.sh start production     # Full production mode with monitoring
+./start.sh start enterprise     # Enterprise mode with comprehensive testing
 
-# Production mode with monitoring and comprehensive testing
-./start.sh production
+# Process management
+./start.sh stop                 # Stop all running instances
+./start.sh restart              # Restart with same mode
+./start.sh restart production   # Restart with production mode
+./start.sh status               # Show running instances and status
 
-# Enterprise mode with full validation and advanced features
-./start.sh enterprise
+# Backward compatibility (still works)
+./start.sh basic                # Same as "./start.sh start basic"
+./start.sh production           # Same as "./start.sh start production"
 
-# Custom port
-./start.sh metrics 5001
+# Quick stop convenience
+./stop.sh                       # Quick stop all instances
 ```
 
 #### Option 2: Traditional Startup

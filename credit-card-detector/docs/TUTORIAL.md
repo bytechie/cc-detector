@@ -101,10 +101,10 @@ The Credit Card Detector supports four distinct modes, each with different featu
 
 | Mode | Command | Testing Level | Resources | Best For |
 |------|---------|---------------|-----------|----------|
-| **Basic** | `./start.sh basic` | Core functionality tests | ~2GB RAM | Fast development, learning |
-| **Metrics** | `./start.sh metrics` | Core + API + monitoring tests | ~4GB RAM | Development with metrics |
-| **Production** | `./start.sh production` | Comprehensive + performance tests | ~8GB RAM | Staging, production |
-| **Enterprise** | `./start.sh enterprise` | Full suite + advanced features | ~16GB RAM | Enterprise deployment |
+| **Basic** | `./start.sh start basic` | Core functionality tests | ~2GB RAM | Fast development, learning |
+| **Metrics** | `./start.sh start metrics` | Core + API + monitoring tests | ~4GB RAM | Development with metrics |
+| **Production** | `./start.sh start production` | Comprehensive + performance tests | ~8GB RAM | Staging, production |
+| **Enterprise** | `./start.sh start enterprise` | Full suite + advanced features | ~16GB RAM | Enterprise deployment |
 
 ### Mode Details
 
@@ -197,17 +197,30 @@ for detection in detections:
 
 ## 🚀 Working with Different Startup Scripts
 
-### 1. Unified Startup Script (Recommended)
+### 1. Enhanced Management Script (Recommended)
 
 ```bash
 # Help and usage information
 ./start.sh --help
 
-# Different modes
-./start.sh basic              # Port 5000
-./start.sh metrics 5001       # Port 5001
-./start.sh production         # Port 5000
-./start.sh enterprise 8080    # Port 8080
+# NEW: Explicit command syntax
+./start.sh start basic          # Start basic mode on port 5000
+./start.sh start metrics 5001   # Start metrics mode on port 5001
+./start.sh start production     # Production mode with monitoring
+./start.sh start enterprise 8080 # Enterprise mode on port 8080
+
+# Process management
+./start.sh stop                 # Stop all running instances
+./start.sh restart              # Restart with same mode
+./start.sh restart production   # Restart with production mode
+./start.sh status               # Show running instances and status
+
+# Backward compatibility (still works)
+./start.sh basic                # Same as "./start.sh start basic"
+./start.sh production           # Same as "./start.sh start production"
+
+# Quick stop convenience
+./stop.sh                       # Quick stop all instances
 ```
 
 ### 2. Mode-Specific Scripts
@@ -242,13 +255,13 @@ for detection in detections:
 
 ```bash
 # Override testing level
-TEST_MODE=enterprise ./start.sh basic
+TEST_MODE=enterprise ./start.sh start basic
 
 # Skip tests for faster startup
-SKIP_TESTS=true ./start.sh production
+SKIP_TESTS=true ./start.sh start production
 
 # Custom port
-./start.sh basic 8080
+./start.sh start basic 8080
 ```
 
 ## 🧪 Testing Your Setup
@@ -489,9 +502,9 @@ docker-compose -f docker-compose.testing.yml --profile monitoring up health-moni
 
 ### 1. Choose the Right Mode
 
-- **Development**: Use `./start.sh basic` for quick iteration
-- **Staging**: Use `./start.sh production` with full testing
-- **Production**: Use `./start.sh enterprise` for comprehensive validation
+- **Development**: Use `./start.sh start basic` for quick iteration
+- **Staging**: Use `./start.sh start production` with full testing
+- **Production**: Use `./start.sh start enterprise` for comprehensive validation
 
 ### 2. Monitor Performance
 
@@ -510,7 +523,7 @@ curl http://localhost:5000/metrics | grep credit_card
 cp config/environments/production.env .env
 
 # Start with production settings
-./start.sh production
+./start.sh start production
 ```
 
 ### 4. Implement Health Checks

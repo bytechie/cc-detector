@@ -12,7 +12,7 @@ git clone https://github.com/bytechie/cc-detector.git
 cd credit-card-detector
 
 # Start with automatic testing (one command!)
-./start.sh basic
+./start.sh start basic
 ```
 
 That's it! The system will:
@@ -51,27 +51,35 @@ curl -X POST http://localhost:5000/scan \
 
 ### For Development
 ```bash
-./start.sh basic          # Fast startup, basic features
+./start.sh start basic          # Fast startup, basic features
 ```
 
 ### For Production
 ```bash
-./start.sh production     # Full monitoring, comprehensive testing
+./start.sh start production     # Full monitoring, comprehensive testing
 ```
 
 ### For Enterprise
 ```bash
-./start.sh enterprise     # All features, maximum testing
+./start.sh start enterprise     # All features, maximum testing
 ```
 
 ### Custom Port
 ```bash
-./start.sh basic 8080     # Use port 8080
+./start.sh start basic 8080     # Use port 8080
+```
+
+### Process Management
+```bash
+./start.sh stop                 # Stop all instances
+./start.sh restart              # Restart with same mode
+./start.sh status               # Check running status
+./stop.sh                       # Quick stop
 ```
 
 ## 🔧 What Just Happened?
 
-When you ran `./start.sh basic`, the system automatically:
+When you ran `./start.sh start basic`, the system automatically:
 
 1. **Checked** if you have the right dependencies
 2. **Started** the credit card detector application
@@ -135,7 +143,7 @@ curl http://localhost:5000/health
 ### Port Already in Use?
 ```bash
 # Use a different port
-./start.sh basic 8080
+./start.sh start basic 8080
 
 # Or kill existing process
 lsof -ti:5000 | xargs kill
@@ -147,7 +155,7 @@ lsof -ti:5000 | xargs kill
 pip install -r requirements.txt
 
 # Or use the startup script (it handles this automatically)
-./start.sh basic
+./start.sh start basic
 ```
 
 ### Tests Failed?
@@ -162,7 +170,7 @@ pip install -r requirements.txt
 
 ### 1. Try Production Mode
 ```bash
-./start.sh production
+./start.sh start production
 ```
 This includes monitoring, dashboards, and comprehensive testing.
 
