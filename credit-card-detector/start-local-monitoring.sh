@@ -42,41 +42,51 @@ docker-compose -f docker-compose.local.yml ps
 # Start the enhanced metrics app
 echo "🎯 Starting enhanced metrics app..."
 source .venv/bin/activate
-python3 app_metrics_demo.py &
+python3 app.py --mode full --port 5000 &
 APP_PID=$!
 
 # Wait for the app to start
-sleep 3
+sleep 5
 
-# Test if everything is working
-echo "🧪 Testing endpoints..."
+# Run comprehensive testing based on mode
+echo "🧪 Running mode-appropriate tests..."
+if [ -f "./run-mode-tests.sh" ]; then
+    chmod +x ./run-mode-tests.sh
+    ./run-mode-tests.sh full
+    TEST_RESULT=$?
 
-# Test app health
-if curl -f http://localhost:5000/health > /dev/null 2>&1; then
-    echo "✅ Credit Card Detector app is healthy"
+    if [ $TEST_RESULT -eq 0 ]; then
+        echo "✅ All tests passed successfully"
+    else
+        echo "⚠️ Some tests failed, but continuing startup"
+    fi
 else
-    echo "❌ Credit Card Detector app health check failed"
-fi
+    echo "⚠️ Testing script not found, running basic checks only..."
 
-# Test metrics endpoint
-if curl -f http://localhost:5000/metrics > /dev/null 2>&1; then
-    echo "✅ Metrics endpoint is accessible"
-else
-    echo "❌ Metrics endpoint check failed"
-fi
+    # Basic endpoint tests as fallback
+    if curl -f http://localhost:5000/health > /dev/null 2>&1; then
+        echo "✅ Credit Card Detector app is healthy"
+    else
+        echo "❌ Credit Card Detector app health check failed"
+    fi
 
-# Test Prometheus
-if curl -f http://localhost:9090/api/v1/status/config > /dev/null 2>&1; then
-    echo "✅ Prometheus is accessible"
-else
-    echo "❌ Prometheus check failed"
-fi
+    if curl -f http://localhost:5000/metrics > /dev/null 2>&1; then
+        echo "✅ Metrics endpoint is accessible"
+    else
+        echo "❌ Metrics endpoint check failed"
+    fi
 
-# Test Grafana
-if curl -f http://localhost:3002/api/health > /dev/null 2>&1; then
-    echo "✅ Grafana is accessible"
-else
-    echo "❌ Grafana check failed"
+    if curl -f http://localhost:9090/api/v1/status/config > /dev/null 2>&1; then
+        echo "✅ Prometheus is accessible"
+    else
+        echo "❌ Prometheus check failed"
+    fi
+
+    if curl -f http://localhost:3002/api/health > /dev/null 2>&1; then
+        echo "✅ Grafana is accessible"
+    else
+        echo "❌ Grafana check failed"
+    fi
 fi
 
 echo ""

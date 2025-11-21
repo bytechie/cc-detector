@@ -1,0 +1,109 @@
+# Docker Compose Testing Configuration for Credit Card Detector
+# This file extends the main configuration with testing services
+
+services:
+  # Testing Service - Runs automated tests after startup
+  test-runner:
+    image: python:3.11-slim
+    container_name: credit-card-detector-tests
+    environment:
+      - PYTHONPATH=/app
+      - APP_URL=http://host.docker.internal:5000
+      - TEST_MODE=${TEST_MODE:-basic}
+    volumes:
+      - .:/app:ro
+      - test_results:/app/test-results
+    working_dir: /app
+    command: >
+      bash -c "
+        apt-get update -qq &&
+        apt-get install -y curl bc jq &&
+        pip install --quiet pytest pytest-cov requests &&
+        sleep 10 &&
+        echo '🧪 Starting automated tests...' &&
+        chmod +x ./run-mode-tests.sh &&
+        ./run-mode-tests.sh $$TEST_MODE
+      "
+    networks:
+      - local-network
+    depends_on:
+      - credit-card-detector
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Load Testing Service
+  load-tester:
+    image: python:3.11-slim
+    container_name: credit-card-detector-load-tests
+    environment:
+      - PYTHONPATH=/app
+      - APP_URL=http://host.docker.internal:5000
+      - LOAD_TEST_DURATION=${LOAD_TEST_DURATION:-60}
+      - LOAD_TEST_CONCURRENCY=${LOAD_TEST_CONCURRENCY:-5}
+    volumes:
+      - .:/app:ro
+      - load_test_results:/app/load-test-results
+    working_dir: /app
+    command: >
+      bash -c "
+        apt-get update -qq &&
+        apt-get install -y curl &&
+        pip install --quiet requests &&
+        sleep 15 &&
+        echo '⚡ Starting load testing...' &&
+        python3 tests/load_testing/generate_load_test.py
+      "
+    networks:
+      - local-network
+    depends_on:
+      - credit-card-detector
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    profiles:
+      - performance
+
+  # Health Check Service
+  health-monitor:
+    image: alpine:latest
+    container_name: credit-card-detector-health-monitor
+    environment:
+      - APP_URL=http://host.docker.internal:5000
+      - PROMETHEUS_URL=http://host.docker.internal:9090
+      - GRAFANA_URL=http://host.docker.internal:3002
+    volumes:
+      - health_logs:/app/logs
+    working_dir: /app
+    command: >
+      sh -c "
+        apk add --no-cache curl jq &&
+        echo '🏥 Starting health monitoring...' &&
+        while true; do
+          echo '\n=== Health Check - '$$(date)' ===' &&
+          echo 'Application Health:' &&
+          curl -s $$APP_URL/health | jq . 2>/dev/null || echo '❌ App not responding' &&
+          echo 'Prometheus Status:' &&
+          curl -s $$PROMETHEUS_URL/api/v1/status/config | jq .version 2>/dev/null || echo '❌ Prometheus not responding' &&
+          echo 'Grafana Status:' &&
+          curl -s $$GRAFANA_URL/api/health | jq . 2>/dev/null || echo '❌ Grafana not responding' &&
+          sleep 30
+        done
+      "
+    networks:
+      - local-network
+    depends_on:
+      - credit-card-detector
+      - prometheus
+      - grafana
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    profiles:
+      - monitoring
+
+volumes:
+  test_results:
+  load_test_results:
+  health_logs:
+
+networks:
+  local-network:
+    external: true

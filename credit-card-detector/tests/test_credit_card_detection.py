@@ -6,9 +6,9 @@ Based on standard credit card test numbers and patterns.
 
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), 'claude_subagent'))
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from skills import detect_credit_cards, redact_credit_cards
+from skills.core import detect_credit_cards, redact_credit_cards
 
 # Test data based on standard credit card testing patterns
 # These are commonly used test numbers that pass Luhn validation

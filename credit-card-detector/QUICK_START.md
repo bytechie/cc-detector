@@ -298,16 +298,10 @@ docker-compose up -d
 ### Production Setup
 ```bash
 # Production deployment (~8GB RAM, 4+ CPU cores)
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose -f docker-compose.production.yml up -d
 
-# Include monitoring stack
-docker-compose -f docker-compose.monitoring.yml up -d
-```
-
-### Enterprise Setup
-```bash
-# Full enterprise stack (~16GB+ RAM, 8+ CPU cores)
-docker-compose -f docker-compose.enterprise.yml up -d
+# Include monitoring stack (already included in production.yml)
+docker-compose -f docker-compose.production.yml up -d
 ```
 
 ## 🎯 Resource Profiles

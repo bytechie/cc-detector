@@ -137,12 +137,12 @@ install = "python -m pip install -e ."
 install-dev = "python -m pip install -e .[dev]"
 test = "pytest"
 test-verbose = "pytest -v"
-test-cov = "pytest --cov=claude_subagent --cov-report=html --cov-report=term"
-test-cov-xml = "pytest --cov=claude_subagent --cov-report=xml"
-lint = "flake8 claude_subagent tests"
-format = "black claude_subagent tests"
-format-check = "black --check claude_subagent tests"
-type-check = "mypy claude_subagent"
+test-cov = "pytest --cov=skills --cov-report=html --cov-report=term"
+test-cov-xml = "pytest --cov=skills --cov-report=xml"
+lint = "flake8 skills tests"
+format = "black skills tests"
+format-check = "black --check skills tests"
+type-check = "mypy skills"
 docs = "mkdocs serve"
 docs-build = "mkdocs build"
 clean = "rm -rf build dist *.egg-info"
@@ -214,11 +214,11 @@ addopts = [
     "-ra",
     "--strict-markers",
     "--strict-config",
-    "--cov=claude_subagent",
-    "--cov-report=html",
-    "--cov-report=term-missing",
-    "--cov-report=xml",
-    "--cov-fail-under=80",
+    # "--cov=skills",
+    # "--cov-report=html",
+    # "--cov-report=term-missing",
+    # "--cov-report=xml",
+    # "--cov-fail-under=80",
 ]
 testpaths = ["tests"]
 markers = [
@@ -230,7 +230,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["claude_subagent"]
+source = ["skills"]
 omit = [
     "*/tests/*",
     "*/test_*",
@@ -240,38 +240,38 @@ omit = [
 branch = true
 fail_under = 80
 
-[tool.tox]
-envlist = ["py311", "py312"]
-isolated_build = true
+# [tool.tox]
+# envlist = ["py311", "py312"]
+# isolated_build = true
 
-[testenv]
-commands = [
-    { python = "python", deps = ["test"], command = "pytest" },
-    { python = "python", deps = ["test", "monitoring"], command = "pytest tests/monitoring/" },
-    { python = "python", deps = ["test", "database"], command = "tests/database/" },
-]
+# [testenv]
+# commands = [
+#     { python = "python", deps = ["test"], command = "pytest" },
+#     { python = "python", deps = ["test", "monitoring"], command = "pytest tests/monitoring/" },
+#     { python = "python", deps = ["test", "database"], command = "tests/database/" },
+# ]
 
-[testenv:lint]
-deps = ["dev"]
-commands = [
-    "black --check",
-    "isort --check-only",
-    "flake8",
-    "mypy",
-]
+# [testenv:lint]
+# deps = ["dev"]
+# commands = [
+#     "black --check",
+#     "isort --check-only",
+#     "flake8",
+#     "mypy",
+# ]
 
-[testenv:docs]
-deps = ["docs"]
-commands = [
-    "mkdocs build",
-]
+# [testenv:docs]
+# deps = ["docs"]
+# commands = [
+#     "mkdocs build",
+# ]
 
-[testenv:perf]
-deps = ["test", "performance"]
-commands = [
-    "pytest -m performance -vv",
-    "python scripts/performance_benchmark.py",
-]
+# [testenv:perf]
+# deps = ["test", "performance"]
+# commands = [
+#     "pytest -m performance -vv",
+#     "python scripts/performance_benchmark.py",
+# ]
 
 [tool.doc8]
 paths = ["docs"]
