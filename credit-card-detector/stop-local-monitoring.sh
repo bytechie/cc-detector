@@ -32,7 +32,7 @@ fi
 
 # Also kill any remaining app processes
 echo "🧹 Cleaning up any remaining processes..."
-pkill -f "app_metrics_demo.py" || true
+pkill -f "app.py" || true
 
 echo ""
 echo "✅ All services stopped successfully!"
