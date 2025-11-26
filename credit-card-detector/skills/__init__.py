@@ -7,10 +7,10 @@ organized by category for better maintainability and discoverability.
 
 # Core skills - these are the main credit card detection functions
 try:
-    from .core.detect_credit_cards import detect as detect_credit_cards
-    from .core.detect_credit_cards_presidio import detect as detect_credit_cards_presidio
-    from .core.redact_credit_cards import redact as redact_credit_cards
-    from .core.redact_credit_cards_presidio import redact as redact_credit_cards_presidio
+    from src.core.detect_credit_cards import detect as detect_credit_cards
+    from src.core.detect_credit_cards_presidio import detect as detect_credit_cards_presidio
+    from src.core.redact_credit_cards import redact as redact_credit_cards
+    from src.core.redact_credit_cards_presidio import redact as redact_credit_cards_presidio
 except ImportError as e:
     print(f"Warning: Could not import core skills: {e}")
     # Set fallback None values
@@ -26,7 +26,7 @@ except ImportError:
     adaptive_example = None
 
 try:
-    from .integration.skill_seekers_integration import example_main as skill_seekers_example
+    from src.integration.skill_seekers_integration import example_main as skill_seekers_example
 except ImportError:
     skill_seekers_example = None
 

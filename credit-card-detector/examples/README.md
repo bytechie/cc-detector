@@ -6,23 +6,29 @@ This directory contains comprehensive examples demonstrating the capabilities of
 
 ```
 examples/
-├── README.md                    # This file
+├── README.md                    # This file - Overview of all examples
+├── README_integration_examples.md # Detailed integration examples guide
+├── integration_demo.py          # Complete demonstration of all integrations
 ├── basic_usage/                 # Basic usage examples
 │   ├── simple_detection.py      # Simple credit card detection
-│   ├── basic_redaction.py       # Basic credit card redaction
-│   └── command_line_demo.py     # Command line usage demo
+│   └── basic_redaction.py       # Basic credit card redaction
 ├── advanced/                    # Advanced feature examples
-│   ├── presidio_integration.py  # Presidio integration examples
-│   ├── adaptive_skills.py       # Adaptive skills system
-│   └── custom_patterns.py       # Custom detection patterns
+│   └ presidio_integration.py    # Presidio integration examples
 ├── performance/                 # Performance and benchmarking
 │   ├── load_testing.py          # Load testing examples
-│   ├── performance_comparison.py # Performance comparison tools
-│   └── benchmark_demos.py       # Benchmarking demonstrations
-└── monitoring/                  # Monitoring and metrics
-    ├── metrics_demo.py          # Prometheus metrics demo
-    ├── health_checks.py         # Health check implementations
-    └── dashboard_setup.py       # Monitoring dashboard setup
+│   └── performance_comparison.py # Performance comparison tools
+├── monitoring/                  # Monitoring and metrics
+│   └ metrics_demo.py            # Prometheus metrics demo
+├── api_integrations/            # Direct API integration examples
+│   ├── README.md                # API integration guide
+│   ├── basic_api.py             # Simple API client examples
+│   └── webhook_server.py        # Production webhook server
+├── claude_skills/               # Claude AI skills integration
+│   ├── README.md                # Claude skills guide and examples
+│   └── claude_skills_example.py # Complete Claude skills implementation
+└── n8n_workflows/              # n8n workflow automation
+    ├── README.md                # n8n setup and workflow examples
+    └── n8n_integration.py       # n8n webhook server and tools
 ```
 
 ## 🚀 **Getting Started**
