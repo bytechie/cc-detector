@@ -1,0 +1,295 @@
+# Resource Profiles Configuration
+# Defines resource requirements and optimization strategies for different deployment sizes
+
+profiles:
+  # Development profile for local development and testing
+  development:
+    description: "Development and testing environment"
+    resources:
+      cpu:
+        cores: 2
+        max_percent: 80
+        strategy: "sequential"
+      memory:
+        total_mb: 4096
+        max_percent: 75
+        cache_size_mb: 256
+      storage:
+        total_gb: 20
+        log_retention_days: 7
+      network:
+        bandwidth_mbps: 100
+    limits:
+      max_concurrent_requests: 5
+      batch_size: 50
+      plugin_limit: 3
+      ml_model_complexity: "lightweight"
+    optimization:
+      enable_caching: true
+      enable_parallel_processing: false
+      skill_priority_only: true
+
+  # Production profile for medium-scale production deployment
+  production:
+    description: "Medium-scale production deployment"
+    resources:
+      cpu:
+        cores: 6
+        max_percent: 75
+        strategy: "batch_optimized"
+      memory:
+        total_mb: 12288
+        max_percent: 80
+        cache_size_mb: 1024
+      storage:
+        total_gb: 100
+        log_retention_days: 30
+      network:
+        bandwidth_mbps: 1000
+    limits:
+      max_concurrent_requests: 20
+      batch_size: 100
+      plugin_limit: 10
+      ml_model_complexity: "medium"
+    optimization:
+      enable_caching: true
+      enable_parallel_processing: true
+      skill_priority_only: false
+      auto_scaling: true
+
+  # Enterprise profile for large-scale enterprise deployment
+  enterprise:
+    description: "Large-scale enterprise deployment"
+    resources:
+      cpu:
+        cores: 16
+        max_percent: 85
+        strategy: "parallel_limited"
+      memory:
+        total_mb: 32768
+        max_percent: 85
+        cache_size_mb: 4096
+      storage:
+        total_gb: 500
+        log_retention_days: 90
+      network:
+        bandwidth_mbps: 10000
+    limits:
+      max_concurrent_requests: 100
+      batch_size: 200
+      plugin_limit: 50
+      ml_model_complexity: "large"
+    optimization:
+      enable_caching: true
+      enable_parallel_processing: true
+      skill_priority_only: false
+      auto_scaling: true
+      distributed_processing: true
+
+# Resource adaptation strategies
+strategies:
+  sequential:
+    description: "Minimal resource usage, processes sequentially"
+    cpu_threshold: 85
+    memory_threshold: 90
+    max_workers: 1
+    batch_multiplier: 0.5
+    enabled_features:
+      - "basic_detection"
+      - "resource_monitoring"
+
+  skill_priority:
+    description: "Focus on high-impact skills only"
+    cpu_threshold: 70
+    memory_threshold: 80
+    max_workers: 2
+    batch_multiplier: 0.7
+    enabled_features:
+      - "basic_detection"
+      - "high_priority_skills"
+      - "resource_monitoring"
+      - "caching"
+
+  batch_optimized:
+    description: "Optimized batch processing"
+    cpu_threshold: 60
+    memory_threshold: 75
+    max_workers: 4
+    batch_multiplier: 1.0
+    enabled_features:
+      - "basic_detection"
+      - "all_skills"
+      - "resource_monitoring"
+      - "caching"
+      - "batch_processing"
+
+  parallel_limited:
+    description: "Maximum parallelization with limits"
+    cpu_threshold: 50
+    memory_threshold: 70
+    max_workers: 8
+    batch_multiplier: 1.5
+    enabled_features:
+      - "basic_detection"
+      - "all_skills"
+      - "resource_monitoring"
+      - "caching"
+      - "batch_processing"
+      - "parallel_processing"
+      - "advanced_ml"
+
+# Performance thresholds and alerts
+thresholds:
+  alerts:
+    cpu:
+      warning: 70
+      critical: 85
+    memory:
+      warning: 75
+      critical: 90
+    disk:
+      warning: 80
+      critical: 95
+    response_time:
+      warning_ms: 200
+      critical_ms: 500
+    error_rate:
+      warning_percent: 2
+      critical_percent: 5
+    queue_size:
+      warning: 100
+      critical: 500
+
+# Auto-scaling configuration
+auto_scaling:
+  enabled: true
+  min_instances: 1
+  max_instances: 10
+  scale_up_threshold:
+    cpu_percent: 70
+    memory_percent: 75
+    queue_size: 50
+  scale_down_threshold:
+    cpu_percent: 30
+    memory_percent: 40
+    queue_size: 5
+  cooldown_period: 300  # 5 minutes
+
+# Cost optimization settings
+cost_optimization:
+  spot_instances:
+    enabled: false
+    max_percentage: 50
+    fallback_to_on_demand: true
+
+  scheduled_scaling:
+    enabled: true
+    schedule:
+      - hours: ["09:00-17:00"]
+        days: ["monday-friday"]
+        min_instances: 3
+        max_instances: 8
+      - hours: ["17:00-09:00"]
+        days: ["monday-friday"]
+        min_instances: 1
+        max_instances: 4
+      - hours: ["all-day"]
+        days: ["saturday-sunday"]
+        min_instances: 1
+        max_instances: 3
+
+  resource_hibernation:
+    enabled: true
+    idle_timeout: 1800  # 30 minutes
+    hibernate_threshold_cpu: 10
+    hibernate_threshold_memory: 20
+
+# Cloud-specific configurations
+cloud_providers:
+  aws:
+    instance_types:
+      development: "t3.medium"
+      production: "m5.large"
+      enterprise: "m5.4xlarge"
+    regions:
+      primary: "us-west-2"
+      backup: "us-east-1"
+    storage_classes:
+      - "gp3"  # Primary storage
+      - "standard"  # Backup storage
+
+  gcp:
+    instance_types:
+      development: "e2-medium"
+      production: "n2-standard-2"
+      enterprise: "n2-standard-16"
+    regions:
+      primary: "us-west1"
+      backup: "us-east1"
+    storage_classes:
+      - "pd-standard"
+      - "pd-cold"
+
+  azure:
+    instance_types:
+      development: "B2s"
+      production: "D2s_v3"
+      enterprise: "D16s_v3"
+    regions:
+      primary: "westus2"
+      backup: "eastus"
+    storage_types:
+      - "Premium_LRS"
+      - "Standard_LRS"
+
+# Database resource requirements
+database:
+  postgresql:
+    development:
+      cpu_cores: 0.5
+      memory_mb: 512
+      storage_gb: 10
+      connections: 20
+    production:
+      cpu_cores: 2
+      memory_mb: 4096
+      storage_gb: 100
+      connections: 100
+    enterprise:
+      cpu_cores: 4
+      memory_mb: 16384
+      storage_gb: 500
+      connections: 500
+
+  redis:
+    development:
+      cpu_cores: 0.25
+      memory_mb: 256
+      storage_gb: 1
+    production:
+      cpu_cores: 0.5
+      memory_mb: 1024
+      storage_gb: 10
+    enterprise:
+      cpu_cores: 2
+      memory_mb: 8192
+      storage_gb: 50
+
+# Monitoring resource allocation
+monitoring:
+  prometheus:
+    cpu_cores: 0.5
+    memory_mb: 512
+    storage_gb: 50
+    retention_days: 15
+
+  grafana:
+    cpu_cores: 0.25
+    memory_mb: 256
+    storage_gb: 5
+
+  jaeger:
+    cpu_cores: 1
+    memory_mb: 2048
+    storage_gb: 100
+    retention_days: 7

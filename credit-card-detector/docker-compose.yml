@@ -1,4 +1,3 @@
-# version: '3.8'
 services:
   presidio-analyzer:
     image: mcr.microsoft.com/presidio-analyzer:latest
@@ -16,13 +15,16 @@ services:
     environment:
       - ANONYMIZER_LOG_LEVEL=INFO
 
-  subagent:
-    build: ./claude_subagent
-    container_name: claude_subagent
+  credit-card-detector:
+    build: .
+    container_name: credit-card-detector
     ports:
       - "5000:5000"
     environment:
-      - SUBAGENT_PORT=5000
+      - FLASK_ENV=production
+      - SUBAGENT_MODE=full
+      - PRESIDIO_ANALYZER_URL=http://presidio-analyzer:3000
+      - PRESIDIO_ANONYMIZER_URL=http://presidio-anonymizer:3001
     depends_on:
       - presidio-analyzer
       - presidio-anonymizer

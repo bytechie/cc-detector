@@ -1,4 +1,4 @@
-from skills.core.detect_credit_cards import detect as find_credit_cards, is_valid_luhn
+from cc_detector.detector import find_credit_cards, is_valid_luhn
 
 
 def test_luhn_valid_and_invalid():
@@ -23,3 +23,7 @@ def test_formatted_with_spaces():
     res = find_credit_cards(text)
     assert res and res[0]['number'] == "4111111111111111"
     assert res[0]['valid']
+
+
+# Note: This test uses the legacy cc_detector import path
+# Use test_detector.py for current credit-card-detector implementation
