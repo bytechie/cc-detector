@@ -12,7 +12,7 @@ from pathlib import Path
 # Add the parent directory to the path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from examples.claude_skills.claude_skills_example import CreditCardDetectorSkill
+from examples.integrations.claude_skills.claude_skills_example import CreditCardDetectorSkill
 
 def demo_claude_skills():
     """Demonstrate Claude Skills integration"""

@@ -1,0 +1,42 @@
+# Credit Card Detector - Production Configuration
+
+# Override default settings for production environment
+app:
+  debug: false
+  host: "0.0.0.0"
+  port: 5000
+
+detection:
+  validation:
+    enabled: true
+    card_type_detection: true
+
+api:
+  rate_limit:
+    enabled: true
+    requests_per_minute: 100
+
+  cors:
+    enabled: true
+    origins: ["https://yourdomain.com"]
+
+integrations:
+  claude_skills:
+    enabled: true
+
+  n8n:
+    enabled: true
+    webhook_port: 8080
+
+monitoring:
+  enabled: true
+  metrics_port: 9090
+  logging_level: "WARNING"
+
+  prometheus:
+    enabled: true
+
+security:
+  authentication:
+    enabled: true
+    api_key_header: "X-API-Key"

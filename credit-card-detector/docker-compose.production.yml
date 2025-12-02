@@ -1,235 +1,50 @@
+# Production Override
+version: '3.8'
+
 services:
-  # Main Application
   credit-card-detector:
     build:
-      context: .
       target: production
-    ports:
-      - "5000:5000"
     environment:
       - FLASK_ENV=production
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/creditcard_detector
-      - REDIS_URL=redis://redis:6379/0
-      - PRESIDIO_ANALYZER_URL=http://presidio-analyzer:3000
-      - PRESIDIO_ANONYMIZER_URL=http://presidio-anonymizer:3001
-      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
-      - LOG_LEVEL=INFO
+      - DEBUG=false
+      - LOG_LEVEL=WARNING
       - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
     depends_on:
       - postgres
       - redis
-      - presidio-analyzer
-      - presidio-anonymizer
-    volumes:
-      - ./config:/app/config:ro
-      - ./logs:/app/logs
-      - ./plugins:/app/plugins
-      - ./skills:/app/skills
-      - app_data:/app/data
-    networks:
-      - app-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     deploy:
-      replicas: 3
+      replicas: 2
       resources:
         limits:
           cpus: '1.0'
-          memory: 1G
+          memory: 512M
         reservations:
           cpus: '0.5'
-          memory: 512M
+          memory: 256M
+    restart: always
 
-  # Database
+  # Enable all production services
   postgres:
-    image: postgres:15-alpine
-    container_name: postgres-prod
     environment:
-      - POSTGRES_DB=creditcard_detector
-      - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql:ro
-      - ./backups:/backups
-    networks:
-      - app-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
+    restart: always
 
-  # Redis Cache
   redis:
-    image: redis:7-alpine
-    container_name: redis-prod
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
-    volumes:
-      - redis_data:/data
-      - ./config/redis.conf:/usr/local/etc/redis/redis.conf:ro
-    networks:
-      - app-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
-        reservations:
-          cpus: '0.125'
-          memory: 128M
+    restart: always
 
-  # Presidio Analyzer
-  presidio-analyzer:
-    image: mcr.microsoft.com/presidio-analyzer:latest
-    container_name: presidio-analyzer-prod
-    ports:
-      - "3000:3000"
-    environment:
-      - PRESIDIO_ANALYZER_ACCEPTED_LANGUAGES=en
-      - PRESIDIO_ANALYZER_DEFAULT_LANGUAGE=en
-      - LOG_LEVEL=INFO
-    networks:
-      - app-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-
-  # Presidio Anonymizer
-  presidio-anonymizer:
-    image: mcr.microsoft.com/presidio-anonymizer:latest
-    container_name: presidio-anonymizer-prod
-    ports:
-      - "3001:3001"
-    environment:
-      - LOG_LEVEL=INFO
-    networks:
-      - app-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
-
-  # Monitoring - Prometheus
   prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus-prod
-    ports:
-      - "9090:9090"
+    restart: always
     volumes:
-      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
-      - ./monitoring/prometheus/rules:/etc/prometheus/rules:ro
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=30d'
-      - '--web.enable-lifecycle'
-    networks:
-      - app-network
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 1G
+      - ./config/production/prometheus.yml:/etc/prometheus/prometheus.yml:ro
 
-  # Monitoring - Grafana
   grafana:
-    image: grafana/grafana:latest
-    container_name: grafana-prod
-    ports:
-      - "3002:3000"
     environment:
-      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
-      - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
-    networks:
-      - app-network
-    restart: unless-stopped
-    depends_on:
-      - prometheus
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 512M
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    restart: always
 
-  # Load Balancer
   nginx:
-    image: nginx:alpine
-    container_name: nginx-prod
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-      - ./logs/nginx:/var/log/nginx
-    networks:
-      - app-network
-    depends_on:
-      - credit-card-detector
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
-
-networks:
-  app-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.21.0.0/16
-
-volumes:
-  postgres_data:
-  redis_data:
-  prometheus_data:
-  grafana_data:
-  app_data:
+    restart: always

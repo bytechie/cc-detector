@@ -1,0 +1,16 @@
+# Development Override
+version: '3.8'
+
+services:
+  credit-card-detector:
+    build:
+      target: basic
+    environment:
+      - FLASK_ENV=development
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./src:/app/src:ro  # Mount source for development
+      - ./examples:/app/examples:ro
+    ports:
+      - "5000:5000"

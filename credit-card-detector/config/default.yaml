@@ -1,0 +1,82 @@
+# Credit Card Detector - Default Configuration
+
+app:
+  name: "Credit Card Detector"
+  version: "2.0.0"
+  host: "0.0.0.0"
+  port: 5000
+  debug: false
+
+# Detection settings
+detection:
+  # Detection algorithms to use: regex, presidio, both
+  algorithms: ["regex"]
+
+  # Card validation settings
+  validation:
+    enabled: true
+    luhn_check: true
+    card_type_detection: false
+
+  # Redaction settings
+  redaction:
+    default_mode: "redact"  # redact, mask
+    show_last_four: true
+
+# API settings
+api:
+  # Rate limiting
+  rate_limit:
+    enabled: false
+    requests_per_minute: 60
+
+  # CORS settings
+  cors:
+    enabled: true
+    origins: ["*"]
+
+# Integration settings
+integrations:
+  claude_skills:
+    enabled: false
+    api_url: ""
+    api_key: ""
+
+  n8n:
+    enabled: false
+    webhook_port: 8080
+    host: "localhost"
+
+# Monitoring settings
+monitoring:
+  enabled: false
+  metrics_port: 9090
+  health_check: true
+  logging_level: "INFO"
+
+  # Prometheus metrics
+  prometheus:
+    enabled: false
+    endpoint: "/metrics"
+
+# Performance settings
+performance:
+  # Text processing limits
+  max_text_length: 100000
+  max_detections: 100
+
+  # Caching
+  cache:
+    enabled: false
+    ttl: 3600  # seconds
+
+# Security settings
+security:
+  # Input validation
+  validate_input: true
+  sanitize_input: true
+
+  # Authentication (optional)
+  authentication:
+    enabled: false
+    api_key_header: "X-API-Key"
