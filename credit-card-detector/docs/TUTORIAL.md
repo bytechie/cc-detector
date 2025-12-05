@@ -53,13 +53,13 @@ The **unified startup script** is the recommended approach for all use cases:
 
 ```bash
 # Basic development with testing
-./start.sh basic
+./start.sh start basic
 
 # Production deployment with comprehensive testing
-./start.sh production
+./start.sh start production
 
 # Enterprise deployment with full validation
-./start.sh enterprise
+./start.sh start enterprise
 ```
 
 ### What Happens During Startup?
@@ -104,7 +104,7 @@ The Credit Card Detector supports four distinct modes, each with different featu
 | **Basic** | `./start.sh start basic` | Core functionality tests | ~2GB RAM | Fast development, learning |
 | **Metrics** | `./start.sh start metrics` | Core + API + monitoring tests | ~4GB RAM | Development with metrics |
 | **Production** | `./start.sh start production` | Comprehensive + performance tests | ~8GB RAM | Staging, production |
-| **Enterprise** | `./start.sh start enterprise` | Full suite + advanced features | ~16GB RAM | Enterprise deployment |
+| **Enterprise** | `./start.sh start enterprise` | Full suite + Docker services | ~16GB RAM | Enterprise deployment |
 
 ### Mode Details
 

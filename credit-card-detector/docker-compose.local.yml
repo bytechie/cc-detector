@@ -1,0 +1,162 @@
+# Credit Card Detector - Local Development Configuration
+# Extends the main docker-compose.yml for local development
+
+version: '3.8'
+
+services:
+  # Database Services
+  postgres:
+    image: postgres:15-alpine
+    container_name: credit-card-detector-postgres
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-creditcard_detector}
+      - POSTGRES_USER=${POSTGRES_USER:-detector_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-detector_pass}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    networks:
+      - app-network
+    restart: unless-stopped
+    profiles:
+      - database
+      - production
+      - enterprise
+
+  redis:
+    image: redis:7-alpine
+    container_name: credit-card-detector-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_pass}
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    restart: unless-stopped
+    profiles:
+      - cache
+      - production
+      - enterprise
+
+  # Presidio Services
+  presidio-analyzer:
+    image: mcr.microsoft.com/presidio-analyzer:latest
+    container_name: presidio-analyzer
+    ports:
+      - "${PRESIDIO_ANALYZER_PORT:-3000}:3000"
+    environment:
+      - ANALYZER_LOG_LEVEL=${PRESIDIO_LOG_LEVEL:-INFO}
+    networks:
+      - app-network
+    restart: unless-stopped
+    profiles:
+      - presidio
+      - advanced
+      - production
+      - enterprise
+
+  presidio-anonymizer:
+    image: mcr.microsoft.com/presidio-anonymizer:latest
+    container_name: presidio-anonymizer
+    ports:
+      - "${PRESIDIO_ANONYMIZER_PORT:-3001}:3001"
+    environment:
+      - ANONYMIZER_LOG_LEVEL=${PRESIDIO_LOG_LEVEL:-INFO}
+    networks:
+      - app-network
+    restart: unless-stopped
+    profiles:
+      - presidio
+      - advanced
+      - production
+      - enterprise
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: credit-card-detector-prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - app-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+      - production
+      - enterprise
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: credit-card-detector-grafana
+    ports:
+      - "${GRAFANA_PORT:-3002}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - app-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+      - production
+      - enterprise
+
+  # Optional AI Services (for enterprise mode)
+  ml-api:
+    image: python:3.11-slim
+    container_name: credit-card-detector-ml-api
+    ports:
+      - "${ML_API_PORT:-8000}:8000"
+    volumes:
+      - ./ml-api:/app
+      - ml_models:/app/models
+    working_dir: /app
+    command: >
+      sh -c "
+        pip install -r requirements.txt &&
+        python app.py
+      "
+    environment:
+      - FLASK_ENV=development
+      - LOG_LEVEL=INFO
+    networks:
+      - app-network
+    profiles:
+      - ai
+      - enterprise
+    depends_on:
+      - redis
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  ml_models:
+    driver: local
+
+networks:
+  app-network:
+    external: true
