@@ -72,7 +72,8 @@ class Config:
             'DEBUG': 'app.debug',
             'LOG_LEVEL': 'monitoring.logging_level',
             'RATE_LIMIT': 'api.rate_limit.requests_per_minute',
-            'API_KEY': 'security.authentication.api_key'
+            'API_KEY': 'security.authentication.api_key',
+            'MONITORING_PROMETHEUS_ENABLED': 'monitoring.prometheus.enabled'
         }
 
         for env_var, config_key in env_mappings.items():

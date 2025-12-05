@@ -379,6 +379,11 @@ main() {
             validate_mode "$MODE"
             check_prerequisites
 
+            # Set port configuration to avoid conflicts
+            export GRAFANA_PORT=3002
+            export PRESIDIO_ANALYZER_PORT=3000
+            export PRESIDIO_ANONYMIZER_PORT=3001
+
             # Start application
             start_application "$MODE" "$PORT"
 

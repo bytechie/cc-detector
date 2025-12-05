@@ -420,7 +420,7 @@ docker-compose -f docker-compose.prod.yml up -d
 docker-compose -f docker-compose.monitoring.yml up -d
 
 # View resource dashboard
-open http://localhost:3000  # Grafana
+open http://localhost:3002  # Grafana
 ```
 
 ### Enterprise Deployment
@@ -433,7 +433,7 @@ docker-compose -f docker-compose.enterprise.yml up -d
 kubectl apply -f k8s-load-balancer.yaml
 
 # Monitor at scale
-open http://localhost:3000  # Grafana Dashboard
+open http://localhost:3002  # Grafana Dashboard
 ```
 
 ---

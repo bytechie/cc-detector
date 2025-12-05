@@ -15,6 +15,7 @@ from werkzeug.exceptions import HTTPException
 from ..detector import CreditCardDetector
 from ..utils.config import Config
 from .schemas import ScanRequest, ScanResponse, HealthResponse, ErrorResponse, Detection
+from .metrics import track_request_metrics, record_credit_card_detection, record_scan_duration, initialize_metrics, update_uptime
 
 
 class CreditCardAPI:
@@ -34,6 +35,21 @@ class CreditCardAPI:
         )
         self.logger = self._setup_logging()
 
+        # Initialize metrics if enabled
+        if config.get('monitoring.prometheus.enabled', False):
+            try:
+                initialize_metrics()
+                self.start_time = time.time()
+                self.logger.info("Prometheus metrics enabled")
+            except ImportError:
+                self.logger.warning("prometheus_client not available, metrics disabled")
+                self.start_time = None
+            except Exception as e:
+                self.logger.error(f"Failed to initialize metrics: {e}")
+                self.start_time = None
+        else:
+            self.start_time = None
+
     def _setup_logging(self) -> logging.Logger:
         """Setup API logging."""
         logger = logging.getLogger(__name__)
@@ -44,8 +60,13 @@ class CreditCardAPI:
         """Register all API endpoints."""
 
         @app.route('/', methods=['GET'])
+        @track_request_metrics
         def index():
             """Root endpoint with service information."""
+            # Update uptime metric
+            if self.start_time:
+                update_uptime(self.start_time)
+
             return jsonify({
                 "service": "Credit Card Detector",
                 "version": "2.0.0",
@@ -59,9 +80,14 @@ class CreditCardAPI:
             })
 
         @app.route('/health', methods=['GET'])
+        @track_request_metrics
         def health():
             """Health check endpoint."""
             try:
+                # Update uptime metric
+                if self.start_time:
+                    update_uptime(self.start_time)
+
                 # Test detector functionality
                 test_result = self.detector.detect("test")
 
@@ -91,11 +117,16 @@ class CreditCardAPI:
                 return jsonify(health_response.to_dict()), 503
 
         @app.route('/scan', methods=['POST'])
+        @track_request_metrics
         def scan():
             """Main credit card detection endpoint."""
             start_time = time.time()
 
             try:
+                # Update uptime metric
+                if self.start_time:
+                    update_uptime(self.start_time)
+
                 # Parse request
                 data = request.get_json()
                 if not data:
@@ -127,6 +158,17 @@ class CreditCardAPI:
                     )
                     for d in scan_result.detections
                 ]
+
+                # Record metrics for each detection
+                for detection in scan_result.detections:
+                    record_credit_card_detection({
+                        'valid': detection.valid,
+                        'card_type': detection.card_type or 'unknown'
+                    })
+
+                # Record scan duration metric
+                scan_duration = time.time() - start_time
+                record_scan_duration(scan_duration, scan_result.cards_found)
 
                 # Create response
                 response = ScanResponse(
@@ -172,15 +214,19 @@ class CreditCardAPI:
     def _add_metrics_endpoint(self, app: Flask):
         """Add Prometheus metrics endpoint if available."""
         try:
-            from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+            from .metrics import get_metrics
 
             @app.route('/metrics', methods=['GET'])
             def metrics():
                 """Prometheus metrics endpoint."""
-                return generate_latest(), 200, {'Content-Type': CONTENT_TYPE_LATEST}
+                return get_metrics()
+
+            self.logger.info("Prometheus metrics endpoint enabled")
 
         except ImportError:
-            self.logger.warning("Prometheus client not available, metrics endpoint disabled")
+            self.logger.warning("Metrics module not available, metrics endpoint disabled")
+        except Exception as e:
+            self.logger.error(f"Failed to add metrics endpoint: {e}")
 
     def _setup_error_handlers(self, app: Flask):
         """Setup global error handlers."""
