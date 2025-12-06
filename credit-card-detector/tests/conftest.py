@@ -152,3 +152,27 @@ def mock_requests():
         mock_response.json.return_value = {"status": "ok"}
         mock_get.return_value = mock_response
         yield mock_get
+
+
+@pytest.fixture
+def clean_app():
+    """Create a clean Flask app instance for testing."""
+    import sys
+    import os
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../src'))
+
+    from api.endpoints import create_app
+    from utils.config import load_config
+
+    # Load configuration for testing
+    config = load_config(None, 'development')
+    config.config['app']['debug'] = True
+    config.config['app']['testing'] = True
+
+    # Create app with minimal configuration
+    app = create_app(config)
+
+    # Set testing mode
+    app.config['TESTING'] = True
+
+    return app

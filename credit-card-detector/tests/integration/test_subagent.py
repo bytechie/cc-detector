@@ -8,7 +8,12 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from app import CreditCardDetectorApp
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src'))
+
+from api.endpoints import create_app
+from utils.config import load_config
 
 
 @pytest.fixture(scope="function")

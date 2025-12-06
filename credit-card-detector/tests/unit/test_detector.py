@@ -1,4 +1,8 @@
-from skills.core.detect_credit_cards import detect as find_credit_cards, is_valid_luhn
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src'))
+
+from core.detect_credit_cards import detect as find_credit_cards, is_valid_luhn
 
 
 def test_luhn_valid_and_invalid():

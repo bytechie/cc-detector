@@ -59,13 +59,19 @@ def main():
         "basic": "development",
         "metrics": "development",
         "production": "production",
-        "enterprise": "production"
+        "enterprise": "production",
+        "full": "production"
     }
 
     environment = mode_to_env.get(args.mode, args.environment)
 
     # Load configuration
     config = load_config(args.config, environment)
+
+    # Debug: Print configuration info
+    print(f"🔧 DEBUG: Mode={args.mode}, Environment={environment}")
+    print(f"🔧 DEBUG: Prometheus enabled: {config.get('monitoring.prometheus.enabled', False)}")
+    print(f"🔧 DEBUG: Monitoring enabled: {config.get('monitoring.enabled', False)}")
 
     # Override config with command line arguments
     if args.host:
@@ -78,6 +84,14 @@ def main():
     # Enable features based on mode
     if args.mode in ["metrics", "production", "enterprise"]:
         config.config["features"]["metrics"] = True
+        # Enable Prometheus metrics for API
+        if "monitoring" not in config.config:
+            config.config["monitoring"] = {}
+        if "prometheus" not in config.config["monitoring"]:
+            config.config["monitoring"]["prometheus"] = {}
+        config.config["monitoring"]["prometheus"]["enabled"] = True
+        config.config["monitoring"]["enabled"] = True
+
     if args.mode in ["production", "enterprise"]:
         config.config["features"]["monitoring"] = True
     if args.mode == "enterprise":

@@ -28,23 +28,23 @@ scrape_configs:
     metrics_path: '/metrics'
     scrape_timeout: 10s
 
-  # PostgreSQL Database (optional)
-  - job_name: 'postgres'
-    static_configs:
-      - targets: ['postgres:5432']
-    scrape_interval: 30s
-    metrics_path: '/metrics'
+  # PostgreSQL Database (optional - requires postgres_exporter)
+  # - job_name: 'postgres'
+  #   static_configs:
+  #     - targets: ['localhost:5432']
+  #   scrape_interval: 30s
+  #   metrics_path: '/metrics'
 
-  # Redis Cache (optional)
-  - job_name: 'redis'
-    static_configs:
-      - targets: ['redis:6379']
-    scrape_interval: 30s
-    metrics_path: '/metrics'
+  # Redis Cache (optional - requires redis_exporter)
+  # - job_name: 'redis'
+  #   static_configs:
+  #     - targets: ['localhost:6379']
+  #   scrape_interval: 30s
+  #   metrics_path: '/metrics'
 
   # Grafana
   - job_name: 'grafana'
     static_configs:
-      - targets: ['grafana:3002']
+      - targets: ['credit-card-detector-grafana:3000']
     scrape_interval: 30s
     metrics_path: '/metrics'
